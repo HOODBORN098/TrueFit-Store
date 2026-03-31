@@ -1,27 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Page } from '../../types';
+import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../context/AuthContext';
+import { Page } from '../../types';
 
 interface ProfilePageProps {
     onNavigate: (page: Page) => void;
 }
 
 export function ProfilePage({ onNavigate }: ProfilePageProps) {
-    const [user, setUser] = useState<{ firstName: string; email: string } | null>(null);
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'orders'>('orders');
 
-    useEffect(() => {
-        // Mock user data from local storage or fetch from API
-        // (In real app, fetch /api/auth/me)
-        const name = localStorage.getItem('customer_name') || 'Customer';
-        // We don't store email in local storage in login, but let's just mock or decode token
-        setUser({ firstName: name, email: 'user@example.com' });
-    }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('customer_token');
-        localStorage.removeItem('customer_name');
-        window.location.reload();
+        logout();
+        onNavigate('home');
     };
 
     return (

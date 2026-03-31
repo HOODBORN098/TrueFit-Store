@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Product } from '../../types';
-import { Plus } from 'lucide-react';
+import { Plus, Heart } from 'lucide-react';
+import { useWishlist } from '../../context/WishlistContext';
 interface ProductCardProps {
   product: Product;
   onClick: () => void;
@@ -12,6 +13,8 @@ export function ProductCard({
   onQuickAdd
 }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id);
   return (
     <div
       className="group cursor-pointer flex flex-col h-full bg-white rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-gray-100"
@@ -21,7 +24,7 @@ export function ProductCard({
 
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
         <img
-          src={product.images[0]}
+          src={product.images && product.images.length > 0 ? product.images[0] : 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800'}
           alt={product.name}
           className={`
             w-full h-full object-cover transition-transform duration-700 ease-out
@@ -30,7 +33,7 @@ export function ProductCard({
 
 
         {/* Secondary image on hover if available */}
-        {product.images[1] &&
+        {product.images && product.images.length > 1 &&
           <img
             src={product.images[1]}
             alt={product.name}
@@ -42,7 +45,7 @@ export function ProductCard({
         }
 
         {/* Quick Add Button */}
-        {onQuickAdd &&
+        {onQuickAdd && product.stock > 0 &&
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -59,14 +62,34 @@ export function ProductCard({
           </button>
         }
 
+        {/* Wishlist Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product);
+          }}
+          className={`
+            absolute top-4 right-4 p-2 rounded-full shadow-sm transition-all duration-300
+            ${isWishlisted ? 'bg-black text-white' : 'bg-white/80 text-gray-400 hover:text-black'}
+            ${isHovered || isWishlisted ? 'opacity-100' : 'opacity-0'}
+          `}
+        >
+          <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
+        </button>
+
         {/* Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {product.newArrival &&
+          {product.stock === 0 &&
+            <span className="bg-red-500 text-white px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
+              Sold Out
+            </span>
+          }
+          {product.newArrival && product.stock > 0 &&
             <span className="bg-white/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
               New
             </span>
           }
-          {product.featured &&
+          {product.featured && product.stock > 0 &&
             <span className="bg-black/90 text-white px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
               Featured
             </span>

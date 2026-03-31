@@ -4,6 +4,8 @@ import { useCart } from '../context/CartContext';
 import { Page } from '../types';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useToast } from '../context/ToastContext';
+import { createOrder } from '../api';
 
 // Replace with your actual publishable key
 const stripePromise = loadStripe('pk_test_placeholder');
@@ -14,7 +16,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements) return;
@@ -79,6 +81,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [mpesaLoading, setMpesaLoading] = useState(false);
   const { clearCart } = useCart();
+  const { showToast } = useToast();
   const [clientSecret, setClientSecret] = useState('');
   const [stripeError, setStripeError] = useState(false);
 
@@ -151,26 +154,40 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
   const handleMpesaPayment = async () => {
     if (!phoneNumber) {
-      alert('Please enter a phone number');
+      showToast('Please enter a phone number', 'error');
       return;
     }
     setMpesaLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/api/mpesa/stkpush', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, amount: Math.ceil(total) }) // Mpesa deals in whole numbers usually
-      });
-      await res.json();
-      if (res.ok) {
-        alert(`M-Pesa prompt sent to ${phoneNumber}. Please confirm on your phone.`);
+      // 1. Create order in our backend
+      const orderData = {
+          full_name: `${contactInfo.firstName} ${contactInfo.lastName}`,
+          email: contactInfo.email,
+          phone: contactInfo.phone,
+          address: shippingInfo.address,
+          city: shippingInfo.city,
+          postal_code: shippingInfo.postalCode,
+          country: shippingInfo.country,
+          total_amount: total,
+          items: items.map(item => ({
+              product: parseInt(item.id),
+              product_name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              size: item.selectedSize,
+              color: item.selectedColor
+          }))
+      };
+
+      const orderRes = await createOrder(orderData);
+      
+      if (orderRes) {
+        showToast(`Order #${orderRes.id} placed successfully!`, 'success');
         clearCart();
         onNavigate('home');
-      } else {
-        alert('Failed to initiate M-Pesa payment');
       }
     } catch (error) {
-      alert('Network error');
+      showToast('Failed to create order', 'error');
     } finally {
       setMpesaLoading(false);
     }

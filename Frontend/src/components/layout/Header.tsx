@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { ShoppingBag, Search, Menu, User, Bell } from 'lucide-react';
+import { ShoppingBag, Search, Menu, User, Bell, Heart, LogOut, Settings, History, ShieldCheck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useUI } from '../../context/UIContext';
+import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
+import { Button } from '../ui/Button';
 import { Page } from '../../types';
 interface HeaderProps {
   onNavigate: (page: Page) => void;
@@ -10,6 +13,8 @@ interface HeaderProps {
 export function Header({ onNavigate, currentPage }: HeaderProps) {
   const { itemCount } = useCart();
   const { toggleMobileMenu } = useUI();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { wishlist } = useWishlist();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -17,7 +22,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [notifications] = useState([
     { id: 1, text: 'New collection dropped!', time: '2m ago', unread: true },
     { id: 2, text: 'Order #1234 shipped', time: '1h ago', unread: true },
-    { id: 3, text: 'Welcome to XIV Store', time: '1d ago', unread: false },
+    { id: 3, text: 'Welcome to TrueFit', time: '1d ago', unread: false },
   ]);
   const hasUnread = notifications.some(n => n.unread);
   const navItems: {
@@ -58,7 +63,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           onClick={() => onNavigate('home')}
           className="text-2xl font-bold tracking-tighter uppercase text-black">
 
-          XIV STORE
+          TRUEFIT
         </button>
 
         {/* Desktop Navigation */}
@@ -111,7 +116,18 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             <button
               className="p-2 hover:bg-gray-50 rounded-full transition-colors hidden sm:block"
               aria-label="Search"
-              onClick={() => setShowSearch(!showSearch)}>
+              onClick={() => {
+                if (showSearch && searchQuery) {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('search', searchQuery);
+                  window.history.pushState({}, '', url.pathname + url.search);
+                  window.dispatchEvent(new Event('search-change'));
+                  onNavigate('shop');
+                  setShowSearch(false);
+                } else {
+                  setShowSearch(!showSearch);
+                }
+              }}>
               <Search size={20} className="text-black" />
             </button>
           </div>
@@ -153,29 +169,84 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             )}
           </div>
 
+          {/* Wishlist Button */}
+          <button
+            className="p-2 hover:bg-gray-50 rounded-full transition-colors relative"
+            aria-label="Wishlist"
+            onClick={() => onNavigate('shop')}>
+            <Heart size={20} className="text-black" />
+            {wishlist.length > 0 &&
+              <span className="absolute top-1 right-1 bg-black h-2 w-2 rounded-full ring-2 ring-white" />
+            }
+          </button>
+
+          {/* Profile Dropdown */}
           <div className="relative">
             <button
-              className="p-2 hover:bg-gray-50 rounded-full transition-colors hidden sm:block"
+              className={`p-2 hover:bg-gray-50 rounded-full transition-colors hidden sm:block ${isAuthenticated ? 'text-black' : 'text-gray-400'}`}
               aria-label="Account"
               onClick={() => setShowProfile(!showProfile)}>
-              <User size={20} className="text-black" />
+              <User size={20} />
             </button>
             {showProfile && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowProfile(false)} />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 shadow-xl z-20 animate-fade-in-up py-2">
-                  <button
-                    onClick={() => { onNavigate('admin-login'); setShowProfile(false); }}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
-                  >
-                    Admin Access
-                  </button>
-                  <button
-                    onClick={() => setShowProfile(false)}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors text-gray-500"
-                  >
-                    Customer Sign In (Soon)
-                  </button>
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 shadow-2xl z-20 animate-fade-in-up py-2 rounded-lg">
+                  {isAuthenticated ? (
+                    <>
+                      <div className="px-4 py-3 border-b border-gray-50">
+                        <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Signed in as</p>
+                        <p className="text-sm font-medium truncate">{user?.username}</p>
+                      </div>
+                      <button
+                        onClick={() => { onNavigate('profile'); setShowProfile(false); }}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <History size={16} /> Order History
+                      </button>
+                      <button
+                        onClick={() => { onNavigate('profile'); setShowProfile(false); }}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <Settings size={16} /> Account Settings
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => { onNavigate('admin-dashboard'); setShowProfile(false); }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-black hover:text-white transition-colors flex items-center gap-3 border-t border-gray-50 mt-1"
+                        >
+                          <ShieldCheck size={16} /> Admin Dashboard
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { logout(); setShowProfile(false); onNavigate('home'); }}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 transition-colors flex items-center gap-3 border-t border-gray-50 mt-1"
+                      >
+                        <LogOut size={16} /> Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-4 space-y-3">
+                        <p className="text-xs text-gray-500 text-center mb-2">Sign in to track orders and save your wishlist.</p>
+                        <Button fullWidth size="sm" onClick={() => { onNavigate('customer-login'); setShowProfile(false); }}>
+                          Sign In
+                        </Button>
+                        <button
+                          onClick={() => { onNavigate('customer-signup'); setShowProfile(false); }}
+                          className="w-full text-center text-xs font-medium hover:underline py-1"
+                        >
+                          Create an Account
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => { onNavigate('admin-login'); setShowProfile(false); }}
+                        className="w-full text-left px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-gray-300 hover:text-black border-t border-gray-50 transition-colors"
+                      >
+                        Staff Only Access
+                      </button>
+                    </>
+                  )}
                 </div>
               </>
             )}

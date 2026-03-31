@@ -3,9 +3,9 @@ import { Filter, ChevronDown, X } from 'lucide-react';
 import { ProductCard } from '../components/ui/ProductCard';
 import { Filters } from '../components/ui/Filters';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
-import { products as staticProducts } from '../data/products'; // Fallback
 import { Page, Product } from '../types';
 import { useUI } from '../context/UIContext';
+import { fetchProducts } from '../api';
 
 // Parse query params helper
 interface ShopPageProps {
@@ -50,57 +50,45 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
     };
   }, []);
 
-  // Fetch products from API
+  // Fetch products from API with filters
   useEffect(() => {
-    fetch('http://localhost:3000/api/products')
-      .then(res => res.json())
+    setLoading(true);
+    
+    // Construct query params for backend
+    const params: Record<string, string> = {};
+    if (searchTerm) params.search = searchTerm;
+    if (activeFilters.category.length > 0) params.category = activeFilters.category[0];
+    
+    // Mapping frontend sort to backend ordering
+    if (sortBy === 'price-low') params.ordering = 'price';
+    if (sortBy === 'price-high') params.ordering = '-price';
+    if (sortBy === 'newest') params.ordering = '-created_at';
+
+    fetchProducts(params)
       .then(data => {
-        // Parse colors/sizes if they are strings (from SQLite seed)
-        const parsedData = data.map((p: any) => ({
+        const parsedData = data.results.map((p) => ({
           ...p,
-          colors: typeof p.colors === 'string' ? JSON.parse(p.colors) : p.colors,
-          sizes: typeof p.sizes === 'string' ? JSON.parse(p.sizes) : p.sizes,
-          // Ensure images is an array
-          images: p.imageUrl ? [p.imageUrl] : [],
-          // Ensure ID is string
-          id: p.id.toString()
-        }));
+          images: p.image_url ? [p.image_url] : (p.image ? [p.image] : ['https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800']),
+          id: p.id.toString(),
+          price: parseFloat(p.price),
+        } as unknown as Product));
         setProducts(parsedData);
-        setLoading(false);
       })
-      .catch(err => {
-        console.error("Failed to fetch products", err);
-        setProducts(staticProducts); // Fallback
-        setLoading(false);
-      });
-  }, []);
+      .catch(err => console.error('Failed to fetch products:', err))
+      .finally(() => setLoading(false));
+  }, [searchTerm, activeFilters.category, sortBy]);
 
-  // Filter logic
+  // Client-side exact filtering for size/color if needed (since backend doesn't support them yet)
   let filteredProducts = [...products];
-
-  // Search Filter
-  if (searchTerm) {
-    const lowerTerm = searchTerm.toLowerCase();
-    filteredProducts = filteredProducts.filter(p =>
-      p.name.toLowerCase().includes(lowerTerm) ||
-      p.description?.toLowerCase().includes(lowerTerm) ||
-      p.category.toLowerCase().includes(lowerTerm)
+  
+  if (activeFilters.size.length > 0) {
+    filteredProducts = filteredProducts.filter(p => 
+      p.sizes.some(s => activeFilters.size.includes(s))
     );
   }
-
-  if (activeFilters.category.length > 0) {
-    filteredProducts = filteredProducts.filter((p) =>
-      activeFilters.category.includes(p.category)
-    );
-  }
-  // Sort logic
-  if (sortBy === 'price-low') {
-    filteredProducts.sort((a, b) => a.price - b.price);
-  } else if (sortBy === 'price-high') {
-    filteredProducts.sort((a, b) => b.price - a.price);
-  } else if (sortBy === 'newest') {
-    filteredProducts.sort(
-      (a, b) => (b.newArrival ? 1 : 0) - (a.newArrival ? 1 : 0)
+  if (activeFilters.color.length > 0) {
+    filteredProducts = filteredProducts.filter(p => 
+      p.colors.some(c => activeFilters.color.includes(c))
     );
   }
   const activeFilterCount =
@@ -149,7 +137,7 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
             ) : 'All Products'}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${filteredProducts.length} products`}
+            {loading ? 'Loading...' : `${products.length} products`}
           </p>
         </div>
 
@@ -289,7 +277,13 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
 
         {/* Product Grid */}
         <div className="flex-1">
-          {filteredProducts.length === 0 ?
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+              {Array(8).fill(0).map((_, i) => (
+                <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 mb-4">
                 No products match your filters.
@@ -300,8 +294,8 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
 
                 Clear all filters
               </button>
-            </div> :
-
+            </div>
+          ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 stagger-children">
               {filteredProducts.map((product) =>
                 <ProductCard
@@ -309,10 +303,9 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
                   product={product}
                   onClick={() => onProductClick(product)}
                   onQuickAdd={() => onProductClick(product)} />
-
               )}
             </div>
-          }
+          )}
         </div>
       </div>
     </div>);

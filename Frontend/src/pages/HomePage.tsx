@@ -2,17 +2,37 @@ import { useState, useEffect } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ui/ProductCard';
-import { products } from '../data/products';
 import { Page, Product } from '../types';
+import { fetchProducts } from '../api';
+
 interface HomePageProps {
   onNavigate: (page: Page) => void;
   onProductClick: (product: Product) => void;
 }
-export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 4);
-  const newArrivals = products.filter((p) => p.newArrival).slice(0, 4);
 
+export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
+  const [productsData, setProductsData] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchProducts()
+      .then(data => {
+        const parsedData = data.results.map((p) => ({
+          ...p,
+          images: p.image_url ? [p.image_url] : (p.image ? [p.image] : ['https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800']),
+          id: p.id.toString(),
+          price: parseFloat(p.price),
+        } as unknown as Product));
+        setProductsData(parsedData);
+      })
+      .catch(err => console.error('Failed to fetch products for home:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const featuredProducts = productsData.filter((p) => p.featured).slice(0, 4);
+  const newArrivals = productsData.filter((p) => p.newArrival).slice(0, 4);
 
   const slides = [
     {
@@ -160,13 +180,22 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 stagger-children">
-          {featuredProducts.map((product) =>
-            <ProductCard
-              key={product.id}
-              product={product}
-              onClick={() => onProductClick(product)}
-              onQuickAdd={() => onProductClick(product)} />
-
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+            ))
+          ) : featuredProducts.length > 0 ? (
+            featuredProducts.map((product) =>
+              <ProductCard
+                key={product.id}
+                product={product}
+                onClick={() => onProductClick(product)}
+                onQuickAdd={() => onProductClick(product)} />
+            )
+          ) : (
+            <div className="col-span-full py-10 text-center text-gray-400 font-medium border border-dashed border-gray-200 uppercase tracking-widest">
+              No featured products.
+            </div>
           )}
         </div>
       </section>
@@ -224,13 +253,22 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 stagger-children">
-          {newArrivals.map((product) =>
-            <ProductCard
-              key={product.id}
-              product={product}
-              onClick={() => onProductClick(product)}
-              onQuickAdd={() => onProductClick(product)} />
-
+          {loading ? (
+            Array(4).fill(0).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
+            ))
+          ) : newArrivals.length > 0 ? (
+            newArrivals.map((product) =>
+              <ProductCard
+                key={product.id}
+                product={product}
+                onClick={() => onProductClick(product)}
+                onQuickAdd={() => onProductClick(product)} />
+            )
+          ) : (
+            <div className="col-span-full py-10 text-center text-gray-400 font-medium border border-dashed border-gray-200 uppercase tracking-widest">
+              No new arrivals.
+            </div>
           )}
         </div>
       </section>
@@ -280,7 +318,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
                 <p className="text-xs uppercase tracking-widest mb-2">
                   Since 2020
                 </p>
-                <p className="text-2xl font-bold">XIV</p>
+                <p className="text-2xl font-bold">TrueFit</p>
               </div>
             </div>
           </div>

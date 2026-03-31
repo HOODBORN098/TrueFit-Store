@@ -12,7 +12,7 @@ export function Footer({ onNavigate }: FooterProps) {
           {/* Brand */}
           <div className="space-y-6">
             <h3 className="text-xl font-bold tracking-tighter uppercase">
-              XIV STORE
+              TRUEFIT
             </h3>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
               Premium fashion essentials for the modern minimalist. Designed in
@@ -125,12 +125,12 @@ export function Footer({ onNavigate }: FooterProps) {
 
         <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
           <div className="flex flex-col md:flex-row items-center gap-4">
-            <p>© 2026 XIV Store. All rights reserved.</p>
+            <p>© 2026 TrueFit. All rights reserved.</p>
             <p>WhatsApp: 0112 394 362</p>
           </div>
           <div className="flex gap-6 items-center">
-            <a href="https://instagram.com/xivstore" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">Instagram</a>
-            <a href="https://facebook.com/xivstore" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">Facebook</a>
+            <a href="https://instagram.com/truefit" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">Instagram</a>
+            <a href="https://facebook.com/truefit" target="_blank" rel="noreferrer" className="hover:text-black transition-colors">Facebook</a>
             <a href="https://wa.me/254112394362" target="_blank" rel="noreferrer" className="hover:text-green-600 transition-colors font-bold">WhatsApp</a>
             {onNavigate && (
               <button

@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import { Fragment } from 'react';
 import { ChevronRight, Home } from 'lucide-react';
 import { Page } from '../../types';
 interface BreadcrumbItem {

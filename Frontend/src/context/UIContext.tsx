@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext, ReactNode } from 'react';
 interface UIContextType {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;

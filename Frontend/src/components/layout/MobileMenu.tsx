@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, Instagram, Twitter, Facebook } from 'lucide-react';
+import { X, Instagram, Facebook } from 'lucide-react';
 import { useUI } from '../../context/UIContext';
 import { Page } from '../../types';
 interface MobileMenuProps {
@@ -24,7 +23,7 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
       <div className="absolute top-0 left-0 bottom-0 w-[80%] max-w-sm bg-white shadow-2xl p-6 flex flex-col">
         <div className="flex justify-between items-center mb-12">
           <span className="text-xl font-bold tracking-tighter uppercase">
-            XIV STORE
+            TRUEFIT
           </span>
           <button
             onClick={() => setMobileMenuOpen(false)}
@@ -63,18 +62,18 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
 
         <div className="border-t border-gray-100 pt-8">
           <div className="flex space-x-6 text-gray-400 mb-8">
-            <a href="https://instagram.com/xivstore" target="_blank" rel="noopener noreferrer">
+            <a href="https://instagram.com/truefit" target="_blank" rel="noopener noreferrer">
               <Instagram className="hover:text-black cursor-pointer transition-colors" />
             </a>
             {/* Using MessageCircle as placeholder for WhatsApp if simple icon not available, or just generic */}
             <a href="https://wa.me/254112394362" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
               <span className="font-bold hover:text-green-600 transition-colors">WA</span>
             </a>
-            <a href="https://facebook.com/xivstore" target="_blank" rel="noopener noreferrer">
+            <a href="https://facebook.com/truefit" target="_blank" rel="noopener noreferrer">
               <Facebook className="hover:text-black cursor-pointer transition-colors" />
             </a>
           </div>
-          <p className="text-xs text-gray-400">© 2026 XIV Store</p>
+          <p className="text-xs text-gray-400">© 2026 TrueFit</p>
           <p className="text-xs text-gray-300 mt-2">WhatsApp: 0112 394 362</p>
         </div>
       </div>

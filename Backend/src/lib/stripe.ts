@@ -1,8 +1,0 @@
-import Stripe from 'stripe';
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
-
-export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-    apiVersion: '2024-04-10', // Use latest API version available
-    typescript: true,
-});

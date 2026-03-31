@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Product, Page } from '../types';
 import { ImageGallery } from '../components/ui/ImageGallery';
@@ -9,6 +9,9 @@ import { Button } from '../components/ui/Button';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useWishlist } from '../context/WishlistContext';
+import { Heart } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 interface ProductDetailPageProps {
   product: Product;
   onNavigate: (page: Page) => void;
@@ -19,6 +22,7 @@ export function ProductDetailPage({
 }: ProductDetailPageProps) {
   const { addItem } = useCart();
   const { showToast } = useToast();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
@@ -39,7 +43,11 @@ export function ProductDetailPage({
     setIsAdding(false);
   };
   return (
-    <div className="max-w-[1920px] mx-auto px-6 py-8 animate-fade-in">
+    <div className="max-w-[1920px] mx-auto px-6 py-8 animate-fade-in text-black">
+      <Helmet>
+        <title>{product.name} | XIV-STORE</title>
+        <meta name="description" content={product.description} />
+      </Helmet>
       {/* Back button and Breadcrumb */}
       <div className="flex items-center justify-between mb-8">
         <button
@@ -86,8 +94,29 @@ export function ProductDetailPage({
               <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">
                 {product.name}
               </h1>
-              <span className="text-2xl font-medium">Ksh {product.price.toLocaleString()}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-2xl font-medium">Ksh {product.price.toLocaleString()}</span>
+                <button 
+                  onClick={() => toggleWishlist(product)}
+                  className={`mt-2 p-2 rounded-full border transition-colors ${
+                    isInWishlist(product.id) ? 'bg-black text-white border-black' : 'text-gray-400 border-gray-100 hover:border-black hover:text-black'
+                  }`}
+                >
+                  <Heart size={20} fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+                </button>
+              </div>
             </div>
+            
+            {product.stock > 0 && product.stock < 10 && (
+              <div className="mb-4 inline-block px-3 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-wider">
+                Only {product.stock} left in stock!
+              </div>
+            )}
+            {product.stock === 0 && (
+              <div className="mb-4 inline-block px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider">
+                Sold Out
+              </div>
+            )}
             <p className="text-gray-600 leading-relaxed max-w-lg">
               {product.description}
             </p>
@@ -129,9 +158,10 @@ export function ProductDetailPage({
               fullWidth
               onClick={handleAddToCart}
               isLoading={isAdding}
+              disabled={product.stock === 0}
               className="mb-4">
 
-              Add to Cart - Ksh {(product.price * quantity).toLocaleString()}
+              {product.stock === 0 ? 'Sold Out' : `Add to Cart - Ksh ${(product.price * quantity).toLocaleString()}`}
             </Button>
 
             <div className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500 uppercase tracking-wider">

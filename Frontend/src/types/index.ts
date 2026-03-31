@@ -7,6 +7,7 @@ export interface Product {
   colors: string[];
   category: string;
   description: string;
+  stock: number;
   newArrival?: boolean;
   featured?: boolean;
 }

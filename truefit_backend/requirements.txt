@@ -1,0 +1,21 @@
+# Django core
+Django>=4.2,<5.0
+
+# Database drivers
+mysqlclient>=2.2.0,<3.0.0   # MySQL (swap out SQLite in production)
+
+# REST API
+djangorestframework>=3.14.0,<4.0.0
+django-filter>=24.0          # Advanced queryset filtering
+
+# Security & rate limiting
+django-ratelimit>=4.1.0      # IP-based rate limiting for API views
+
+# Image handling
+Pillow>=10.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# CORS
+django-cors-headers>=4.0.0

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Page } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { Plus, LogOut } from 'lucide-react';
@@ -19,9 +19,12 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:3000/api/products?limit=100')
+        fetch('http://127.0.0.1:8000/api/products/')
             .then(res => res.json())
-            .then(data => setProducts(data.data || []))
+            .then(data => {
+                const results = data.results ? data.results : (Array.isArray(data) ? data : []);
+                setProducts(results);
+            })
             .catch(console.error);
     }, []);
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CartProvider } from './context/CartContext';
 import { UIProvider } from './context/UIContext';
 import { ToastProvider } from './context/ToastContext';
@@ -19,6 +19,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { AdminLogin } from './pages/Admin/Login';
 import { AdminDashboard } from './pages/Admin/Dashboard';
 import { AddProduct } from './pages/Admin/AddProduct';
+import { AdminAddCollection } from './pages/Admin/AdminAddCollection';
 import { CustomerLogin } from './pages/Customer/Login';
 import { CustomerSignup } from './pages/Customer/Signup';
 import { ProfilePage } from './pages/Customer/Profile';
@@ -28,10 +29,36 @@ import { InfoPage } from './pages/InfoPages';
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingProductId, setEditingProductId] = useState<string | undefined>(undefined);
+  const [editingCollectionId, setEditingCollectionId] = useState<string | undefined>(undefined);
   const { isAdmin, isAuthenticated, loading } = useAuth();
+  
+  // ── Hidden URL Hash Listener for Admin ──────────────────────────────
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin') {
+        setCurrentPage('admin-login');
+        // Clear the hash to prevent repeated navigation if user explores back
+        window.history.pushState("", document.title, window.location.pathname + window.location.search);
+      }
+    };
+    
+    // Check on initial mount
+    handleHashChange();
+    
+    // Listen for changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const navigate = (page: Page) => {
     window.scrollTo(0, 0);
+    if (page !== 'admin-edit-product') {
+      setEditingProductId(undefined);
+    }
+    if (page !== 'admin-edit-collection') {
+        setEditingCollectionId(undefined);
+    }
     setCurrentPage(page);
   };
 
@@ -56,13 +83,28 @@ function AppContent() {
       case 'shop': return <ShopPage onProductClick={handleProductClick} onNavigate={navigate} />;
       case 'collections': return <CollectionsPage onNavigate={navigate} />;
       case 'product': return selectedProduct ? 
-        <ProductDetailPage product={selectedProduct} onNavigate={navigate} /> : 
+        <ProductDetailPage product={selectedProduct} onNavigate={navigate} onProductClick={handleProductClick} /> : 
         <ShopPage onProductClick={handleProductClick} onNavigate={navigate} />;
       case 'cart': return <CartPage onNavigate={navigate} />;
       case 'checkout': return <CheckoutPage onNavigate={navigate} />;
       case 'admin-login': return <AdminLogin onNavigate={navigate} />;
-      case 'admin-dashboard': return <AdminDashboard onNavigate={navigate} />;
+      case 'admin-dashboard': return (
+        <AdminDashboard 
+          onNavigate={navigate} 
+          onEditProduct={(id) => {
+            setEditingProductId(id);
+            navigate('admin-edit-product');
+          }} 
+          onEditCollection={(id) => {
+              setEditingCollectionId(id);
+              navigate('admin-edit-collection');
+          }}
+        />
+      );
       case 'admin-add-product': return <AddProduct onNavigate={navigate} />;
+      case 'admin-edit-product': return <AddProduct onNavigate={navigate} productId={editingProductId} />;
+      case 'admin-add-collection': return <AdminAddCollection onNavigate={navigate} />;
+      case 'admin-edit-collection': return <AdminAddCollection onNavigate={navigate} collectionId={editingCollectionId} />;
       case 'customer-login': return <CustomerLogin onNavigate={navigate} />;
       case 'customer-signup': return <CustomerSignup onNavigate={navigate} />;
       case 'profile': return isAuthenticated ? <ProfilePage onNavigate={navigate} /> : <CustomerLogin onNavigate={navigate} />;
@@ -70,6 +112,8 @@ function AppContent() {
       case 'faq':
       case 'shipping':
       case 'size-guide':
+      case 'privacy-policy':
+      case 'terms-conditions':
         return <InfoPage type={currentPage} onNavigate={navigate} />;
       default: return <HomePage onNavigate={navigate} onProductClick={handleProductClick} />;
     }

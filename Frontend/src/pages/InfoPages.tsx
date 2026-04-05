@@ -1,5 +1,5 @@
 import { Page } from '../types';
-import { ArrowLeft, Truck, HelpCircle, Ruler, Mail } from 'lucide-react';
+import { ArrowLeft, Truck, HelpCircle, Ruler, Mail, ShieldCheck, FileText } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 interface InfoPageProps {
@@ -16,9 +16,9 @@ export function InfoPage({ type, onNavigate }: InfoPageProps) {
           icon: <Mail className="w-12 h-12 mb-4 text-black" />,
           description: 'Have a question? We are here to help. Reach out to our team.',
           details: [
-            { label: 'Email', value: 'hello@truefit.com' },
-            { label: 'WhatsApp', value: '0112 394 362' },
-            { label: 'Hours', value: 'Mon-Fri: 9am - 6pm' }
+            { label: 'Email', value: 'ericwambua098@gmail.com' },
+            { label: 'WhatsApp', value: '+254 112 394 362' },
+            { label: 'Hours', value: 'Mon-Sun: 24/7 Support' }
           ]
         };
       case 'shipping':
@@ -54,8 +54,28 @@ export function InfoPage({ type, onNavigate }: InfoPageProps) {
             { label: 'Large', value: 'Chest: 40-42"' }
           ]
         };
-      default:
-        return null;
+      case 'privacy-policy':
+        return {
+          title: 'Privacy Policy',
+          icon: <ShieldCheck className="w-12 h-12 mb-4 text-black" />,
+          description: 'Your privacy is our priority. We are committed to protecting your personal data.',
+          details: [
+            { label: 'Data Collection', value: 'Minimal & Secure' },
+            { label: 'Third Parties', value: 'Never Shared/Sold' },
+            { label: 'Security', value: 'SSL & Data Encryption' }
+          ]
+        };
+      case 'terms-conditions':
+        return {
+          title: 'Terms & Conditions',
+          icon: <FileText className="w-12 h-12 mb-4 text-black" />,
+          description: 'Guidelines for using our services and purchasing from TrueFIT.',
+          details: [
+            { label: 'Shipping', value: 'Handled with care' },
+            { label: 'Payments', value: 'Secure Gateways' },
+            { label: 'Account', value: 'User responsibility' }
+          ]
+        };
     }
   };
 

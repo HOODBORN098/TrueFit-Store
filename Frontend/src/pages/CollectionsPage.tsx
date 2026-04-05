@@ -47,7 +47,12 @@ export function CollectionsPage({ onNavigate }: CollectionsPageProps) {
           collections.map((collection) => (
             <div
               key={collection.id}
-              onClick={() => onNavigate('shop')}
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('collection', collection.slug);
+                window.history.pushState({}, '', url);
+                onNavigate('shop');
+              }}
               className="group relative aspect-[4/5] md:aspect-[16/10] overflow-hidden cursor-pointer"
             >
               <img

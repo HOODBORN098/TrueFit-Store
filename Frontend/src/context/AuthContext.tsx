@@ -8,6 +8,7 @@ interface User {
     firstName: string;
     lastName: string;
     isStaff: boolean;
+    phone?: string;
 }
 
 interface AuthContextType {
@@ -29,8 +30,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { showToast } = useToast();
 
     useEffect(() => {
-        const storedToken = localStorage.getItem('access_token');
-        const storedUser = localStorage.getItem('user_data');
+        // Purge legacy global auth
+        if (localStorage.getItem('access_token')) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user_data');
+        }
+
+        const storedToken = sessionStorage.getItem('access_token');
+        const storedUser = sessionStorage.getItem('user_data');
         
         if (storedToken && storedUser) {
             try {
@@ -42,11 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
         setLoading(false);
+
+        const handleSessionExpired = () => {
+            logout();
+        };
+
+        window.addEventListener('session-expired', handleSessionExpired);
+        return () => window.removeEventListener('session-expired', handleSessionExpired);
     }, []);
 
     const login = (accessToken: string, refreshToken: string, userData: any) => {
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('refresh_token', refreshToken);
+        sessionStorage.setItem('access_token', accessToken);
+        sessionStorage.setItem('refresh_token', refreshToken);
         
         const mappedUser: User = {
             id: userData.id,
@@ -55,17 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             firstName: userData.first_name || '',
             lastName: userData.last_name || '',
             isStaff: userData.is_staff || false,
+            phone: userData.phone || '',
         };
 
-        localStorage.setItem('user_data', JSON.stringify(mappedUser));
+        sessionStorage.setItem('user_data', JSON.stringify(mappedUser));
         setToken(accessToken);
         setUser(mappedUser);
     };
 
     const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user_data');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('user_data');
         setToken(null);
         setUser(null);
         showToast('Logged out successfully', 'info');

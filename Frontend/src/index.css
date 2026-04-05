@@ -112,11 +112,8 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 4px;
 }
 
-/* PLEASE NOTE: THESE TAILWIND IMPORTS SHOULD NEVER BE DELETED - DO NOT DELETE THIS COMMENT */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-/* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL - DO NOT DELETE THIS COMMENT */
+/* PLEASE NOTE: THESE TAILWIND IMPORTS ARE AT THE TOP OF THE FILE */
+
 
 /* Custom Animations */
 @keyframes fade-in-up {

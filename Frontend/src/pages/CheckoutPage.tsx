@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { Page } from '../types';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -10,7 +11,7 @@ import { createOrder } from '../api';
 // Replace with your actual publishable key
 const stripePromise = loadStripe('pk_test_placeholder');
 
-function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
+function CheckoutForm({ onSuccess, termsAccepted }: { onSuccess: () => void; termsAccepted: boolean }) {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState<string | null>(null);
@@ -45,7 +46,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       <PaymentElement />
       {message && <div className="text-red-500 mt-4 text-sm">{message}</div>}
       <div className="mt-8">
-        <Button size="lg" disabled={isLoading || !stripe || !elements} isLoading={isLoading}>
+        <Button size="lg" disabled={isLoading || !stripe || !elements || !termsAccepted} isLoading={isLoading}>
           Pay Now
         </Button>
       </div>
@@ -76,15 +77,17 @@ interface CheckoutPageProps {
 
 export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const { items, subtotal } = useCart();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const { isAuthenticated, user } = useAuth();
+  
+  const [step, setStep] = useState<1 | 2>(1);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'mpesa'>('card');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [mpesaLoading, setMpesaLoading] = useState(false);
   const { clearCart } = useCart();
   const { showToast } = useToast();
   const [clientSecret, setClientSecret] = useState('');
   const [stripeError, setStripeError] = useState(false);
-
+  
   // Shipping form state
   const [shippingInfo, setShippingInfo] = useState({
     address: '',
@@ -92,13 +95,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     postalCode: '',
     country: ''
   });
-  const [contactInfo, setContactInfo] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: ''
-  });
   const [isDetecting, setIsDetecting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const detectLocation = () => {
     if (!navigator.geolocation) {
@@ -145,12 +143,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const total = subtotal + shipping + tax;
 
   useEffect(() => {
-    const token = localStorage.getItem('customer_token');
-    if (!token) {
+    if (!isAuthenticated) {
       alert('You must be logged in to checkout.');
       onNavigate('customer-login');
     }
-  }, [onNavigate]);
+  }, [isAuthenticated, onNavigate]);
 
   const handleMpesaPayment = async () => {
     if (!phoneNumber) {
@@ -159,11 +156,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     }
     setMpesaLoading(true);
     try {
-      // 1. Create order in our backend
+      // 1. Create order in our backend using authenticated user's contextual data
       const orderData = {
-          full_name: `${contactInfo.firstName} ${contactInfo.lastName}`,
-          email: contactInfo.email,
-          phone: contactInfo.phone,
+          full_name: `${user?.firstName} ${user?.lastName}`.trim() || 'Customer',
+          email: user?.email || '',
+          phone: phoneNumber,
           address: shippingInfo.address,
           city: shippingInfo.city,
           postal_code: shippingInfo.postalCode,
@@ -193,13 +190,12 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     }
   };
 
-  const isContactValid = contactInfo.firstName && contactInfo.lastName && contactInfo.email && contactInfo.phone;
   const isShippingValid = shippingInfo.address && shippingInfo.city && shippingInfo.postalCode && shippingInfo.country;
 
-  const handleStepChange = (newStep: 1 | 2 | 3) => {
-    if (newStep === 3) {
+  const handleStepChange = (newStep: 1 | 2) => {
+    if (newStep === 2) {
       if (!isShippingValid) return;
-      setStep(3); // Move to step 3 immediately so user can see payment options
+      setStep(2); // Move to step 2 immediately so user can see payment options
       // Fetch payment intent asynchronously
       fetch('http://localhost:3000/api/payment/create-intent', {
         method: 'POST',
@@ -231,66 +227,12 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
         <div className="lg:col-span-7">
           {/* Steps */}
           <div className="flex items-center space-x-4 mb-12 text-sm font-medium">
-            <span className={step >= 1 ? 'text-black' : 'text-gray-400'}>Contact</span>
+            <span className={step >= 1 ? 'text-black' : 'text-gray-400'}>Shipping</span>
             <span className="text-gray-300">/</span>
-            <span className={step >= 2 ? 'text-black' : 'text-gray-400'}>Shipping</span>
-            <span className="text-gray-300">/</span>
-            <span className={step >= 3 ? 'text-black' : 'text-gray-400'}>Payment</span>
+            <span className={step >= 2 ? 'text-black' : 'text-gray-400'}>Payment</span>
           </div>
 
           {step === 1 && (
-            <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold uppercase tracking-tight mb-8">Contact Information</h2>
-              <div className="grid grid-cols-2 gap-6">
-                <Input
-                  label="First Name"
-                  name="fname"
-                  autoComplete="given-name"
-                  value={contactInfo.firstName}
-                  onChange={(val) => setContactInfo({ ...contactInfo, firstName: val })}
-                />
-                <Input
-                  label="Last Name"
-                  name="lname"
-                  autoComplete="family-name"
-                  value={contactInfo.lastName}
-                  onChange={(val) => setContactInfo({ ...contactInfo, lastName: val })}
-                />
-              </div>
-              <Input
-                label="Email Address"
-                type="email"
-                name="email"
-                autoComplete="email"
-                value={contactInfo.email}
-                onChange={(val) => setContactInfo({ ...contactInfo, email: val })}
-              />
-              <Input
-                label="Phone Number"
-                type="tel"
-                name="phone"
-                autoComplete="tel"
-                value={contactInfo.phone}
-                onChange={(val) => setContactInfo({ ...contactInfo, phone: val })}
-                placeholder="e.g. +254 ..."
-              />
-              <div className="mt-12">
-                <Button
-                  onClick={() => setStep(2)}
-                  size="lg"
-                  disabled={!isContactValid}
-                  title={!isContactValid ? "Please fill in all contact details" : ""}
-                >
-                  Continue to Shipping
-                </Button>
-                {!isContactValid && contactInfo.firstName && (
-                  <p className="text-xs text-red-500 mt-2 italic">Please complete all fields to proceed.</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
             <div className="animate-fade-in">
               <div className="flex justify-between items-start mb-8">
                 <h2 className="text-2xl font-bold uppercase tracking-tight">Shipping Address</h2>
@@ -334,9 +276,8 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                 onChange={(val) => setShippingInfo({ ...shippingInfo, country: val })}
               />
               <div className="mt-12 flex items-center gap-4">
-                <button onClick={() => setStep(1)} className="text-sm font-medium underline">Back</button>
                 <Button
-                  onClick={() => handleStepChange(3)}
+                  onClick={() => handleStepChange(2)}
                   size="lg"
                   disabled={!isShippingValid}
                 >
@@ -349,7 +290,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold uppercase tracking-tight mb-8">Payment</h2>
               <div className="flex space-x-4 mb-8">
@@ -371,7 +312,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                 <div className="bg-gray-50 p-6 rounded mb-8 border border-gray-200">
                   {clientSecret ? (
                     <Elements options={{ clientSecret }} stripe={stripePromise}>
-                      <CheckoutForm onSuccess={() => alert('Order Placed Successfully!')} />
+                      <CheckoutForm onSuccess={() => alert('Order Placed Successfully!')} termsAccepted={termsAccepted} />
                     </Elements>
                   ) : stripeError ? (
                     <div className="text-sm text-red-500 bg-red-50 p-4 border border-red-100 rounded">
@@ -406,6 +347,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                       fullWidth
                       onClick={handleMpesaPayment}
                       isLoading={mpesaLoading}
+                      disabled={!termsAccepted}
                     // Manual style override for Green button
                     >
                       <span className="text-white">Pay with M-Pesa</span>
@@ -413,8 +355,26 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                   </div>
                 </div>
               )}
+
+              {/* Terms & Conditions Acceptance */}
+              <div className="mt-8 pt-8 border-t border-gray-100 flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 border-gray-300 rounded text-black focus:ring-black"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                  I have read and agree to the{' '}
+                  <button onClick={() => onNavigate('terms-conditions')} className="text-black underline font-medium hover:text-gray-600 transition-colors">Terms & Conditions</button>
+                  {' '}and{' '}
+                  <button onClick={() => onNavigate('privacy-policy')} className="text-black underline font-medium hover:text-gray-600 transition-colors">Privacy Policy</button>.
+                </label>
+              </div>
+
               <div className="mt-12 flex items-center gap-4">
-                <button onClick={() => setStep(2)} className="text-sm font-medium underline">Back</button>
+                <button onClick={() => setStep(1)} className="text-sm font-medium underline">Back</button>
               </div>
             </div>
           )}
@@ -435,16 +395,16 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                     <p className="text-xs text-gray-500 mt-1">Size: {item.selectedSize} / {item.selectedColor}</p>
                     <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
                   </div>
-                  <span className="text-sm font-medium">Ksh {(item.price * item.quantity).toLocaleString()}</span>
+                  <span className="text-sm font-medium">KSH {(item.price * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
             </div>
             <div className="border-t border-gray-200 pt-6 space-y-3 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>Ksh {subtotal.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `Ksh ${shipping.toLocaleString()}`}</span></div>
-              <div className="flex justify-between"><span>Tax</span><span>Ksh {tax.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>KSH {subtotal.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `KSH ${shipping.toLocaleString()}`}</span></div>
+              <div className="flex justify-between"><span>Tax</span><span>KSH {tax.toLocaleString()}</span></div>
               <div className="border-t border-gray-200 pt-4 flex justify-between text-lg font-bold">
-                <span>Total</span><span>Ksh {total.toLocaleString()}</span>
+                <span>Total</span><span>KSH {total.toLocaleString()}</span>
               </div>
             </div>
           </div>

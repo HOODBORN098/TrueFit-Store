@@ -65,7 +65,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'truefit_backend.wsgi.application'
 
 # ── Database ───────────────────────────────────────────────────────────────────
-# Toggle via DB_ENGINE env var: 'sqlite' (default, local dev) or 'mysql' (production)
+# Toggle via DB_ENGINE env var: 'sqlite', 'mysql', or 'postgresql'
 _DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').strip().lower()
 
 if _DB_ENGINE == 'mysql':
@@ -81,6 +81,17 @@ if _DB_ENGINE == 'mysql':
                 'charset': 'utf8mb4',
                 'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
+        }
+    }
+elif _DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'truefit_db'),
+            'USER': os.getenv('DB_USER', 'truefit_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'truefit123'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
         }
     }
 else:
@@ -134,21 +145,15 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        # Anonymous users: 100 requests per minute
         'anon': '100/min',
-        # Authenticated users: 500 requests per minute
         'user': '500/min',
     },
-    # Prevent sensitive error details leaking to clients in production
     'EXCEPTION_HANDLER': 'products.exceptions.custom_exception_handler',
 }
 
 # ── CORS Configuration ─────────────────────────────────────────────────────────
-# Read allowed origins from env (comma-separated). Keeps hardcoded URLs out of source.
 _CORS_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _CORS_ORIGINS_ENV.split(',') if o.strip()]
-
-# Allow credentials for cookie-based auth (set to False if not needed)
 CORS_ALLOW_CREDENTIALS = True
 
 # ── Security Headers (production hardening) ────────────────────────────────────
@@ -158,7 +163,14 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000          # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = True
+# -- JWT Configuration ----------------------------------------------------------
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}

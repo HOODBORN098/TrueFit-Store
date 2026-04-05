@@ -12,6 +12,7 @@ export function CustomerSignup({ onNavigate }: CustomerSignupProps) {
         firstName: '',
         lastName: '',
         email: '',
+        phone: '',
         password: '',
         confirmPassword: ''
     });
@@ -39,7 +40,8 @@ export function CustomerSignup({ onNavigate }: CustomerSignupProps) {
                     email: formData.email,
                     password: formData.password,
                     first_name: formData.firstName,
-                    last_name: formData.lastName
+                    last_name: formData.lastName,
+                    phone: formData.phone
                 }),
             });
 
@@ -102,6 +104,18 @@ export function CustomerSignup({ onNavigate }: CustomerSignupProps) {
                             name="email"
                             className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-black transition-colors"
                             value={formData.email}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Phone Number</label>
+                        <input
+                            type="tel"
+                            required
+                            name="phone"
+                            placeholder="e.g. +254 712 345 678"
+                            className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-black transition-colors"
+                            value={formData.phone}
                             onChange={handleChange}
                         />
                     </div>

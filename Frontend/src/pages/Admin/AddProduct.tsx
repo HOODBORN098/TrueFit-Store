@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Page } from '../../types';
 import { Button } from '../../components/ui/Button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
-import { createProduct } from '../../api';
+import { createProduct, updateProduct, fetchProduct, fetchCollections, ApiCollection } from '../../api';
 
 interface AddProductProps {
     onNavigate: (page: Page) => void;
+    productId?: string;
 }
 
 interface FormErrors {
@@ -20,22 +21,58 @@ interface FormErrors {
 
 const CATEGORIES = ['Tops', 'Bottoms', 'Outerwear', 'Hoodies', 'Accessories', 'Footwear', 'Sets'];
 
-export function AddProduct({ onNavigate }: AddProductProps) {
+export function AddProduct({ onNavigate, productId }: AddProductProps) {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [availableCollections, setAvailableCollections] = useState<ApiCollection[]>([]);
     const [errors, setErrors] = useState<FormErrors>({});
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         price: '',
         category: '',
         stock: '',
-        imageUrl: '',
-        sizes: [] as string[],
+        sizes: [] as {name: string, price: number}[],
         colors: [] as string[],
         featured: false,
         newArrival: false,
+        collections: [] as number[],
     });
+
+    const isEdit = !!productId;
+
+    useEffect(() => {
+        fetchCollections()
+            .then(data => setAvailableCollections(data))
+            .catch(err => console.error('Failed to fetch collections', err));
+
+        if (isEdit) {
+            setLoading(true);
+            fetchProduct(productId)
+                .then(product => {
+                    setFormData({
+                        name: product.name,
+                        description: product.description,
+                        price: product.price,
+                        category: product.category,
+                        stock: product.stock.toString(),
+                        sizes: typeof product.sizes[0] === 'string' 
+                            ? (product.sizes as string[]).map(s => ({ name: s, price: parseFloat(product.price) }))
+                            : (product.sizes as any[]),
+                        colors: product.colors,
+                        featured: product.featured,
+                        newArrival: product.newArrival,
+                        collections: product.collections || [],
+                    });
+                })
+                .catch(() => {
+                    showToast('Failed to fetch product details', 'error');
+                    onNavigate('admin-dashboard');
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [productId]);
 
     // ── Client-side validation ──────────────────────────────────────────────
     const validate = (): boolean => {
@@ -58,9 +95,6 @@ export function AddProduct({ onNavigate }: AddProductProps) {
         if (!formData.category) {
             newErrors.category = 'Please select a category.';
         }
-        if (formData.imageUrl && !/^https?:\/\/.+/.test(formData.imageUrl)) {
-            newErrors.imageUrl = 'Image URL must start with http:// or https://';
-        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -72,22 +106,39 @@ export function AddProduct({ onNavigate }: AddProductProps) {
 
         setLoading(true);
         try {
-            await createProduct({
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                price: parseFloat(formData.price),
-                stock: parseInt(formData.stock),
-                category: formData.category,
-                image_url: formData.imageUrl || null,
-                sizes: formData.sizes,
-                colors: formData.colors,
-                featured: formData.featured,
-                newArrival: formData.newArrival,
-            });
-            showToast('Product added successfully!', 'success');
+            const submitData = new FormData();
+            submitData.append('name', formData.name.trim());
+            submitData.append('description', formData.description.trim());
+            submitData.append('price', formData.price);
+            submitData.append('stock', formData.stock);
+            submitData.append('category', formData.category);
+            
+            // Append lists as JSON strings so DRF's JSONField can parse them
+            submitData.append('sizes', JSON.stringify(formData.sizes));
+            submitData.append('colors', JSON.stringify(formData.colors));
+            
+            // Append booleans as strings
+            submitData.append('featured', String(formData.featured));
+            submitData.append('newArrival', String(formData.newArrival));
+            
+            // For ManyToManyField with FormData, we can append multiple times or use JSON
+            // Since we use JSON for sizes/colors, let's be consistent
+            submitData.append('collections', JSON.stringify(formData.collections));
+
+            if (imageFile) {
+                submitData.append('image', imageFile);
+            }
+
+            if (isEdit) {
+                await updateProduct(productId, submitData);
+                showToast('Product updated successfully!', 'success');
+            } else {
+                await createProduct(submitData);
+                showToast('Product added successfully!', 'success');
+            }
             onNavigate('admin-dashboard');
         } catch (error) {
-            const msg = error instanceof Error ? error.message : 'Failed to add product.';
+            const msg = error instanceof Error ? error.message : `Failed to ${isEdit ? 'update' : 'add'} product.`;
             showToast(msg, 'error');
         } finally {
             setLoading(false);
@@ -103,13 +154,15 @@ export function AddProduct({ onNavigate }: AddProductProps) {
         }
     };
 
-    const toggleSize = (size: string) => {
-        setFormData(prev => ({
-            ...prev,
-            sizes: prev.sizes.includes(size)
-                ? prev.sizes.filter(s => s !== size)
-                : [...prev.sizes, size],
-        }));
+    const toggleSize = (sizeName: string) => {
+        setFormData(prev => {
+            const exists = prev.sizes.find(s => s.name === sizeName);
+            if (exists) {
+                return { ...prev, sizes: prev.sizes.filter(s => s.name !== sizeName) };
+            } else {
+                return { ...prev, sizes: [...prev.sizes, { name: sizeName, price: Number(formData.price) || 0 }] };
+            }
+        });
     };
 
     const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -121,6 +174,15 @@ export function AddProduct({ onNavigate }: AddProductProps) {
             colors: prev.colors.includes(color)
                 ? prev.colors.filter(c => c !== color)
                 : [...prev.colors, color],
+        }));
+    };
+    
+    const toggleCollection = (id: number) => {
+        setFormData(prev => ({
+            ...prev,
+            collections: prev.collections.includes(id)
+                ? prev.collections.filter(cId => cId !== id)
+                : [...prev.collections, id],
         }));
     };
 
@@ -136,7 +198,9 @@ export function AddProduct({ onNavigate }: AddProductProps) {
                 <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
             </button>
 
-            <h1 className="text-3xl font-bold uppercase tracking-tight mb-8">Add New Product</h1>
+            <h1 className="text-3xl font-bold uppercase tracking-tight mb-8">
+                {isEdit ? 'Edit Product' : 'Add New Product'}
+            </h1>
 
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
@@ -172,7 +236,7 @@ export function AddProduct({ onNavigate }: AddProductProps) {
                 {/* Price + Stock */}
                 <div className="grid grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Price (Ksh) *</label>
+                        <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Price (KSH) *</label>
                         <input
                             name="price"
                             type="number"
@@ -220,39 +284,72 @@ export function AddProduct({ onNavigate }: AddProductProps) {
                     <FieldError field="category" />
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Image URL</label>
+                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Product Image</label>
                     <input
-                        name="imageUrl"
-                        type="url"
-                        value={formData.imageUrl}
-                        onChange={handleChange}
-                        placeholder="https://images.unsplash.com/..."
-                        className={`w-full border p-3 focus:outline-none focus:border-black ${errors.imageUrl ? 'border-red-400' : 'border-gray-300'}`}
+                        name="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                                setImageFile(e.target.files[0]);
+                                setErrors(prev => ({ ...prev, imageUrl: undefined }));
+                            }
+                        }}
+                        className={`w-full border p-3 focus:outline-none focus:border-black bg-white ${errors.imageUrl ? 'border-red-400' : 'border-gray-300'}`}
                     />
                     <FieldError field="imageUrl" />
-                    <p className="text-xs text-gray-400 mt-1">Paste a direct link to the product image. Leave blank to use a default.</p>
+                    <p className="text-xs text-gray-400 mt-1">Select an image from your computer.</p>
                 </div>
 
                 {/* Sizes */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-3">Available Sizes</label>
-                    <div className="flex flex-wrap gap-2">
-                        {AVAILABLE_SIZES.map(size => (
-                            <button
-                                key={size}
-                                type="button"
-                                onClick={() => toggleSize(size)}
-                                className={`px-4 py-2 text-sm font-medium border transition-colors ${
-                                    formData.sizes.includes(size)
-                                        ? 'bg-black text-white border-black'
-                                        : 'border-gray-300 hover:border-black'
-                                }`}
-                            >
-                                {size}
-                            </button>
-                        ))}
+                    <label className="block text-sm font-medium text-gray-700 uppercase mb-3">Available Sizes & Prices</label>
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-wrap gap-2">
+                            {AVAILABLE_SIZES.map(size => {
+                                const isSelected = formData.sizes.some(s => s.name === size);
+                                return (
+                                    <button
+                                        key={size}
+                                        type="button"
+                                        onClick={() => toggleSize(size)}
+                                        className={`px-4 py-2 text-sm font-medium border transition-colors ${
+                                            isSelected
+                                                ? 'bg-black text-white border-black'
+                                                : 'border-gray-300 hover:border-black'
+                                        }`}
+                                    >
+                                        {size}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {formData.sizes.length > 0 && (
+                            <div className="grid grid-cols-2 gap-4 mt-2 bg-gray-50 p-4 border border-gray-100">
+                                {formData.sizes.map(sizeObj => (
+                                    <div key={sizeObj.name}>
+                                        <label className="block text-xs font-bold uppercase mb-1 text-gray-500">Size {sizeObj.name} Price (KSH)</label>
+                                        <input 
+                                            type="number" 
+                                            value={sizeObj.price || ''}
+                                            onChange={(e) => {
+                                                const newPrice = Number(e.target.value);
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    sizes: prev.sizes.map(s => 
+                                                        s.name === sizeObj.name ? { ...s, price: newPrice } : s
+                                                    )
+                                                }));
+                                            }}
+                                            className="w-full border p-2 text-sm focus:outline-none focus:border-black"
+                                            required
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -298,9 +395,34 @@ export function AddProduct({ onNavigate }: AddProductProps) {
                         <span className="text-sm font-medium uppercase">New Arrival</span>
                     </label>
                 </div>
+                
+                {/* Collections Selection */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 uppercase mb-3">Add to Collections</label>
+                    <div className="flex flex-wrap gap-2">
+                        {availableCollections.length > 0 ? (
+                            availableCollections.map(col => (
+                                <button
+                                    key={col.id}
+                                    type="button"
+                                    onClick={() => toggleCollection(col.id)}
+                                    className={`px-4 py-2 text-sm font-medium border transition-colors ${
+                                        formData.collections.includes(col.id)
+                                            ? 'bg-black text-white border-black'
+                                            : 'border-gray-300 hover:border-black'
+                                    }`}
+                                >
+                                    {col.name}
+                                </button>
+                            ))
+                        ) : (
+                            <p className="text-xs text-gray-400 italic">No collections available. Create one first.</p>
+                        )}
+                    </div>
+                </div>
 
                 <Button type="submit" variant="primary" size="lg" fullWidth isLoading={loading}>
-                    Create Product
+                    {isEdit ? 'Update Product' : 'Create Product'}
                 </Button>
             </form>
         </div>

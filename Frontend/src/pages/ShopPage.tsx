@@ -5,6 +5,7 @@ import { Filters } from '../components/ui/Filters';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 import { Page, Product } from '../types';
 import { useUI } from '../context/UIContext';
+import { useWishlist } from '../context/WishlistContext';
 import { fetchProducts } from '../api';
 
 // Parse query params helper
@@ -23,14 +24,24 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNewArrival, setIsNewArrival] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [isWishlistOnly, setIsWishlistOnly] = useState(false);
+  const [collectionSlug, setCollectionSlug] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const { wishlist } = useWishlist();
 
   // Handle Search & Category Events
   useEffect(() => {
     const updateSearch = () => {
       const params = new URLSearchParams(window.location.search);
       setSearchTerm(params.get('search') || '');
+      setIsNewArrival(params.get('newArrival') === 'true');
+      setIsFeatured(params.get('featured') === 'true');
+      setIsWishlistOnly(params.get('wishlist') === 'true');
+      setCollectionSlug(params.get('collection') || '');
+      
       const cat = params.get('category');
       if (cat) {
         setActiveFilters(prev => ({ ...prev, category: [cat] }));
@@ -58,6 +69,9 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
     const params: Record<string, string> = {};
     if (searchTerm) params.search = searchTerm;
     if (activeFilters.category.length > 0) params.category = activeFilters.category[0];
+    if (collectionSlug) params.collections__slug = collectionSlug;
+    if (isNewArrival) params.newArrival = 'true';
+    if (isFeatured) params.featured = 'true';
     
     // Mapping frontend sort to backend ordering
     if (sortBy === 'price-low') params.ordering = 'price';
@@ -76,14 +90,18 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
       })
       .catch(err => console.error('Failed to fetch products:', err))
       .finally(() => setLoading(false));
-  }, [searchTerm, activeFilters.category, sortBy]);
+  }, [searchTerm, activeFilters.category, collectionSlug, sortBy, isNewArrival, isFeatured]);
 
   // Client-side exact filtering for size/color if needed (since backend doesn't support them yet)
   let filteredProducts = [...products];
+
+  if (isWishlistOnly) {
+    filteredProducts = filteredProducts.filter(p => wishlist.some(w => w.id === p.id));
+  }
   
   if (activeFilters.size.length > 0) {
     filteredProducts = filteredProducts.filter(p => 
-      p.sizes.some(s => activeFilters.size.includes(s))
+      p.sizes.some(s => activeFilters.size.includes(typeof s === 'string' ? s : s.name))
     );
   }
   if (activeFilters.color.length > 0) {
@@ -134,10 +152,20 @@ export function ShopPage({ onProductClick, onNavigate }: ShopPageProps) {
                   <X size={24} />
                 </button>
               </>
-            ) : 'All Products'}
+            ) : isWishlistOnly ? (
+              'My Favourites'
+            ) : isNewArrival ? (
+              'New Arrivals'
+            ) : isFeatured ? (
+              'Best Sellers'
+            ) : collectionSlug ? (
+               `${collectionSlug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Collection`
+            ) : (
+               'All Products'
+            )}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? 'Loading...' : `${products.length} products`}
+            {loading ? 'Loading...' : `${filteredProducts.length} products`}
           </p>
         </div>
 

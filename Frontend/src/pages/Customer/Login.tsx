@@ -31,23 +31,9 @@ export function CustomerLogin({ onNavigate }: CustomerLoginProps) {
 
             const loginData = await loginRes.json();
 
-            if (loginRes.ok) {
-                // 2. Fetch user profile (In a real app, this should be returned in login or a separate /me/ call)
-                // For now, we'll try to get it from the token or a mock profile fetch
-                // Since our UserSerializer and RegisterView are already done, we'll use a standard profile fetch if it existed
-                // But for simplicity in this turn, login with the data we have.
-                
-                // Let's assume we want to fetch the user info. 
-                // Normally TokenObtainPair only returns tokens.
-                // We'll mock the user data part for now based on the email provided.
-                
-                const userData = {
-                    id: 1, // Will be fetched from backend in next iteration
-                    username: email,
-                    email: email,
-                    first_name: 'Customer',
-                    is_staff: false
-                };
+            if (loginRes.ok && loginData.user) {
+                // Safely extract the custom user profile injected by the backend CustomTokenObtainPairSerializer
+                const userData = loginData.user;
 
                 login(loginData.access, loginData.refresh, userData);
                 showToast('Welcome back!', 'success');

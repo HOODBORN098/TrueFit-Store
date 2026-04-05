@@ -11,6 +11,15 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface ApiCollection {
+  id: number;
+  name: string;
+  slug: string;
+  image: string | null;
+  description: string;
+  created_at: string;
+}
+
 export interface ApiProduct {
   id: number;
   name: string;
@@ -25,15 +34,7 @@ export interface ApiProduct {
   colors: string[];
   featured: boolean;
   newArrival: boolean;
-  created_at: string;
-}
-
-export interface ApiCollection {
-  id: number;
-  name: string;
-  slug: string;
-  image: string | null;
-  description: string;
+  collections: number[];
   created_at: string;
 }
 
@@ -46,17 +47,20 @@ export interface PaginatedResponse<T> {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+async function apiFetch<T>(path: string, options?: RequestInit & { noAuth?: boolean }): Promise<T> {
   const url = `${BASE_URL}${path}`;
-  const token = localStorage.getItem('access_token');
+  const token = sessionStorage.getItem('access_token');
   
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     ...(options?.headers as Record<string, string> ?? {}),
   };
 
-  if (token) {
+  if (!(options?.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  if (token && !options?.noAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -66,10 +70,24 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      const errorBody = await response.json().catch(() => ({}));
+      // Check if it's a "token expired" or similar JWT error
+      const isTokenError = 
+        JSON.stringify(errorBody).toLowerCase().includes('token_not_valid') || 
+        JSON.stringify(errorBody).toLowerCase().includes('expired');
+      
+      if (isTokenError) {
+        // Dispatch global event so AuthContext can clean up
+        window.dispatchEvent(new Event('session-expired'));
+        throw new Error('Your session has expired. Please log in again.');
+      }
+    }
+
     let errorMessage = `API error ${response.status}`;
     try {
       const errorBody = await response.json();
-      errorMessage = errorBody.message ?? JSON.stringify(errorBody);
+      errorMessage = errorBody.message ?? errorBody.detail ?? errorBody.error ?? JSON.stringify(errorBody);
     } catch {
       // Response body wasn't JSON — use the status text
       errorMessage = `${response.status} ${response.statusText}`;
@@ -77,7 +95,24 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(errorMessage);
   }
 
-  return response.json() as Promise<T>;
+  // Handle 204 No Content or empty bodies
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return {} as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    // If it's not JSON but we expected something, return empty or throw? 
+    // Usually, if we're here, we expect JSON.
+    console.error('Failed to parse JSON response:', text);
+    return {} as T;
+  }
 }
 
 // ─── Products ─────────────────────────────────────────────────────────────────
@@ -90,23 +125,44 @@ export async function fetchProducts(
   params: Record<string, string> = {}
 ): Promise<PaginatedResponse<ApiProduct>> {
   const qs = new URLSearchParams(params).toString();
-  return apiFetch<PaginatedResponse<ApiProduct>>(`/api/products/${qs ? `?${qs}` : ''}`);
+  return apiFetch<PaginatedResponse<ApiProduct>>(`/api/products/${qs ? `?${qs}` : ''}`, { noAuth: true });
 }
 
 /**
  * Fetch a single product by its ID.
  */
 export async function fetchProduct(id: number | string): Promise<ApiProduct> {
-  return apiFetch<ApiProduct>(`/api/products/${id}/`);
+  return apiFetch<ApiProduct>(`/api/products/${id}/`, { noAuth: true });
 }
 
 /**
  * Create a new product (used by the Admin Add Product form).
  */
-export async function createProduct(data: Record<string, unknown>): Promise<ApiProduct> {
+export async function createProduct(data: Record<string, unknown> | FormData): Promise<ApiProduct> {
+  const isFormData = data instanceof FormData;
   return apiFetch<ApiProduct>('/api/products/', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+}
+
+/**
+ * Update an existing product.
+ */
+export async function updateProduct(id: number | string, data: Record<string, unknown> | FormData): Promise<ApiProduct> {
+  const isFormData = data instanceof FormData;
+  return apiFetch<ApiProduct>(`/api/products/${id}/`, {
+    method: 'PATCH',
+    body: isFormData ? data : JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a product.
+ */
+export async function deleteProduct(id: number | string): Promise<void> {
+  return apiFetch<void>(`/api/products/${id}/`, {
+    method: 'DELETE',
   });
 }
 
@@ -116,7 +172,36 @@ export async function createProduct(data: Record<string, unknown>): Promise<ApiP
  * Fetch all collections (not paginated by the backend).
  */
 export async function fetchCollections(): Promise<ApiCollection[]> {
-  return apiFetch<ApiCollection[]>('/api/collections/');
+  return apiFetch<ApiCollection[]>('/api/collections/', { noAuth: true });
+}
+
+/**
+ * Create a new collection.
+ */
+export async function createCollection(data: FormData): Promise<ApiCollection> {
+  return apiFetch<ApiCollection>('/api/collections/', {
+    method: 'POST',
+    body: data,
+  });
+}
+
+/**
+ * Update a collection.
+ */
+export async function updateCollection(id: number | string, data: FormData): Promise<ApiCollection> {
+  return apiFetch<ApiCollection>(`/api/collections/${id}/`, {
+    method: 'PATCH',
+    body: data,
+  });
+}
+
+/**
+ * Delete a collection.
+ */
+export async function deleteCollection(id: number | string): Promise<void> {
+  return apiFetch<void>(`/api/collections/${id}/`, {
+    method: 'DELETE',
+  });
 }
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
@@ -128,5 +213,26 @@ export async function createOrder(orderData: any): Promise<any> {
     return apiFetch<any>('/api/orders/create/', {
         method: 'POST',
         body: JSON.stringify(orderData),
+    });
+}
+
+/**
+ * Fetch the current user's personal order history.
+ */
+export async function fetchMyOrders(): Promise<any[]> {
+    return apiFetch<any[]>('/api/orders/my-orders/', {
+        method: 'GET',
+    });
+}
+
+// ─── Newsletter ──────────────────────────────────────────────────────────────
+
+/**
+ * Subscribe an email address to the TrueFIT newsletter.
+ */
+export async function subscribeToNewsletter(email: string): Promise<{ message: string }> {
+    return apiFetch<{ message: string }>('/api/newsletter/subscribe/', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
     });
 }

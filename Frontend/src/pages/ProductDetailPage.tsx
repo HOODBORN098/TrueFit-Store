@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Product, Page } from '../types';
+import { fetchProducts } from '../api';
+import { ProductCard } from '../components/ui/ProductCard';
 import { ImageGallery } from '../components/ui/ImageGallery';
 import { SizeSelector } from '../components/ui/SizeSelector';
 import { ColorSelector } from '../components/ui/ColorSelector';
@@ -15,10 +17,12 @@ import { Helmet } from 'react-helmet-async';
 interface ProductDetailPageProps {
   product: Product;
   onNavigate: (page: Page) => void;
+  onProductClick: (product: Product) => void;
 }
 export function ProductDetailPage({
   product,
-  onNavigate
+  onNavigate,
+  onProductClick
 }: ProductDetailPageProps) {
   const { addItem } = useCart();
   const { showToast } = useToast();
@@ -28,6 +32,31 @@ export function ProductDetailPage({
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0); // Ensure page scrolls to top when product changes
+    if (product?.category) {
+      fetchProducts({ category: product.category })
+        .then(data => {
+          // Filter out the current product and limit to 4
+          const filtered = data.results
+            .filter(p => p.id.toString() !== product.id)
+            .slice(0, 4)
+            .map(p => ({
+              ...p,
+              images: p.image_url ? [p.image_url] : (p.image ? [p.image] : ['https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=800']),
+              id: p.id.toString(),
+              price: parseFloat(p.price),
+            } as unknown as Product));
+          setRelatedProducts(filtered);
+        })
+        .catch(err => console.error('Failed to fetch related products:', err));
+    }
+  }, [product]);
+
+  const sizeObj = product.sizes.find(s => (typeof s === 'string' ? s : s.name) === selectedSize);
+  const currentPrice = sizeObj && typeof sizeObj !== 'string' ? sizeObj.price : product.price;
   const handleAddToCart = async () => {
     if (!selectedSize || !selectedColor) {
       setError(true);
@@ -38,7 +67,12 @@ export function ProductDetailPage({
     setIsAdding(true);
     // Simulate a brief delay for feedback
     await new Promise((resolve) => setTimeout(resolve, 300));
+    
+    // We pass the size-specific price directly, or CartContext will compute it.
+    // Assuming CartContext needs to know the correct item price, we should update the product object safely
+    // or just pass it as is and let CartContext figure out the price, which is cleaner.
     addItem(product, selectedSize, selectedColor, quantity);
+    
     showToast(`${product.name} added to cart`, 'success');
     setIsAdding(false);
   };
@@ -95,7 +129,7 @@ export function ProductDetailPage({
                 {product.name}
               </h1>
               <div className="flex flex-col items-end">
-                <span className="text-2xl font-medium">Ksh {product.price.toLocaleString()}</span>
+                <span className="text-2xl font-medium">KSH {currentPrice.toLocaleString()}</span>
                 <button 
                   onClick={() => toggleWishlist(product)}
                   className={`mt-2 p-2 rounded-full border transition-colors ${
@@ -140,7 +174,9 @@ export function ProductDetailPage({
                 setSelectedSize(s);
                 setError(false);
               }}
-              error={error && !selectedSize} />
+              error={error && !selectedSize}
+              onSizeGuideClick={() => onNavigate('size-guide')} 
+            />
 
 
             <div className="space-y-3">
@@ -161,11 +197,11 @@ export function ProductDetailPage({
               disabled={product.stock === 0}
               className="mb-4">
 
-              {product.stock === 0 ? 'Sold Out' : `Add to Cart - Ksh ${(product.price * quantity).toLocaleString()}`}
+              {product.stock === 0 ? 'Sold Out' : `Add to Cart - KSH ${(currentPrice * quantity).toLocaleString()}`}
             </Button>
 
             <div className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500 uppercase tracking-wider">
-              <div className="border border-gray-100 py-4">Free Shipping</div>
+              <div className="border border-gray-100 py-4">Shipping Across Kenya</div>
               <div className="border border-gray-100 py-4">Secure Payment</div>
               <div className="border border-gray-100 py-4">30 Day Returns</div>
             </div>
@@ -173,12 +209,31 @@ export function ProductDetailPage({
         </div>
       </div>
 
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-24 border-t border-gray-100 pt-16">
+          <h2 className="text-2xl font-bold uppercase tracking-tight mb-8">
+            You May Also Like
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+            {relatedProducts.map((relatedProduct) => (
+              <ProductCard
+                key={relatedProduct.id}
+                product={relatedProduct}
+                onClick={() => onProductClick(relatedProduct)}
+                onQuickAdd={() => onProductClick(relatedProduct)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Mobile Sticky Add to Cart */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 lg:hidden z-30">
         <div className="flex items-center justify-between mb-3">
           <span className="font-bold">{product.name}</span>
           <span className="font-bold">
-            Ksh {(product.price * quantity).toLocaleString()}
+            KSH {(currentPrice * quantity).toLocaleString()}
           </span>
         </div>
         <Button

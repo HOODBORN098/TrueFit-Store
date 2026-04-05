@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Product, Collection, Order, OrderItem
+from .models import Product, Collection, Order, OrderItem, NewsletterSubscription
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 import re
 
 
@@ -11,7 +12,11 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'slug', 'description', 'price', 'image', 'image_url', 
+            'stock', 'category', 'sizes', 'colors', 'featured', 'newArrival', 
+            'collections', 'created_at', 'updated_at'
+        ]
         read_only_fields = ('id', 'slug', 'created_at', 'updated_at')
 
     def validate_price(self, value):
@@ -47,10 +52,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def validate_sizes(self, value):
         if not isinstance(value, list):
-            raise serializers.ValidationError("Sizes must be a list, e.g. [\"S\", \"M\", \"L\"]")
+            raise serializers.ValidationError("Sizes must be a list, e.g. [{\"name\": \"S\", \"price\": 4500}]")
         for size in value:
-            if not isinstance(size, str) or len(size.strip()) == 0:
-                raise serializers.ValidationError("Each size entry must be a non-empty string.")
+            # Support legacy string sizes during transition
+            if isinstance(size, str):
+                if len(size.strip()) == 0:
+                    raise serializers.ValidationError("Each size entry must be a non-empty string or object.")
+                continue
+                
+            if not isinstance(size, dict):
+                raise serializers.ValidationError("Each size entry must be an object with name and price.")
+            if 'name' not in size or not isinstance(size['name'], str) or len(size['name'].strip()) == 0:
+                raise serializers.ValidationError("Size piece must contain a valid 'name'.")
+            if 'price' not in size or not isinstance(size['price'], (int, float)):
+                raise serializers.ValidationError("Size piece must contain a valid 'price' number.")
+            if size['price'] <= 0:
+                raise serializers.ValidationError("Size price must be greater than zero.")
         return value
 
     def validate_colors(self, value):
@@ -78,14 +95,31 @@ class CollectionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Collection name must be at least 3 characters long.")
         return value
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        data['user'] = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_staff': user.is_staff,
+            'phone': getattr(user.profile, 'phone', '') if hasattr(user, 'profile') else ''
+        }
+        return data
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    phone = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'password', 'first_name', 'last_name', 'phone')
 
     def create(self, validated_data):
+        phone = validated_data.pop('phone', '')
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -93,6 +127,9 @@ class UserSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', '')
         )
+        if hasattr(user, 'profile'):
+            user.profile.phone = phone
+            user.profile.save()
         return user
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -116,3 +153,14 @@ class OrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             OrderItem.objects.create(order=order, **item_data)
         return order
+
+
+class NewsletterSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsletterSubscription
+        fields = ('email',)
+
+    def validate_email(self, value):
+        if NewsletterSubscription.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already subscribed.")
+        return value

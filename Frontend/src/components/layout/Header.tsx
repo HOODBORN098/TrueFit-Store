@@ -5,6 +5,7 @@ import { useUI } from '../../context/UIContext';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { Button } from '../ui/Button';
+import { Logo } from '../ui/Logo';
 import { Page } from '../../types';
 interface HeaderProps {
   onNavigate: (page: Page) => void;
@@ -19,15 +20,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [showProfile, setShowProfile] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications] = useState([
-    { id: 1, text: 'New collection dropped!', time: '2m ago', unread: true },
-    { id: 2, text: 'Order #1234 shipped', time: '1h ago', unread: true },
-    { id: 3, text: 'Welcome to TrueFit', time: '1d ago', unread: false },
-  ]);
+  const [notifications] = useState<{ id: number; text: string; time: string; unread: boolean }[]>([]);
   const hasUnread = notifications.some(n => n.unread);
   const navItems: {
     label: string;
     page: Page;
+    params?: Record<string, string>;
   }[] = [
       {
         label: 'Shop',
@@ -35,11 +33,13 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
       },
       {
         label: 'New Arrivals',
-        page: 'shop'
+        page: 'shop',
+        params: { newArrival: 'true' }
       },
       {
         label: 'Best Sellers',
-        page: 'shop'
+        page: 'shop',
+        params: { featured: 'true' }
       },
       {
         label: 'Collections',
@@ -58,12 +58,11 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           <Menu size={24} />
         </button>
 
-        {/* Logo */}
         <button
           onClick={() => onNavigate('home')}
-          className="text-2xl font-bold tracking-tighter uppercase text-black">
-
-          TRUEFIT
+          className="flex items-center h-10 select-none"
+        >
+          <Logo />
         </button>
 
         {/* Desktop Navigation */}
@@ -71,7 +70,18 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           {navItems.map((item) =>
             <button
               key={item.label}
-              onClick={() => onNavigate(item.page)}
+              onClick={() => {
+                const url = new URL(window.location.href);
+                // Clear existing filters and set new ones if provided
+                const newParams = new URLSearchParams();
+                if (item.params) {
+                  Object.entries(item.params).forEach(([k, v]) => newParams.set(k, v));
+                }
+                
+                window.history.pushState({}, '', url.pathname + (newParams.toString() ? `?${newParams.toString()}` : ''));
+                window.dispatchEvent(new Event('search-change'));
+                onNavigate(item.page);
+              }}
               className={`
                 text-sm font-medium uppercase tracking-wider transition-colors
                 ${currentPage === item.page ? 'text-black' : 'text-black/60 hover:text-black'}
@@ -173,7 +183,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           <button
             className="p-2 hover:bg-gray-50 rounded-full transition-colors relative"
             aria-label="Wishlist"
-            onClick={() => onNavigate('shop')}>
+            onClick={() => {
+              const url = new URL(window.location.href);
+              window.history.pushState({}, '', url.pathname + '?wishlist=true');
+              window.dispatchEvent(new Event('search-change'));
+              onNavigate('shop');
+            }}>
             <Heart size={20} className="text-black" />
             {wishlist.length > 0 &&
               <span className="absolute top-1 right-1 bg-black h-2 w-2 rounded-full ring-2 ring-white" />
@@ -239,12 +254,6 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           Create an Account
                         </button>
                       </div>
-                      <button
-                        onClick={() => { onNavigate('admin-login'); setShowProfile(false); }}
-                        className="w-full text-left px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-gray-300 hover:text-black border-t border-gray-50 transition-colors"
-                      >
-                        Staff Only Access
-                      </button>
                     </>
                   )}
                 </div>

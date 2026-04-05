@@ -1,15 +1,18 @@
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 from .models import Product, Collection, Order
+from .permissions import IsAdminOrReadOnly
 from .serializers import (
     ProductSerializer, CollectionSerializer, 
-    UserSerializer, OrderSerializer
+    UserSerializer, OrderSerializer, CustomTokenObtainPairSerializer,
+    NewsletterSubscriptionSerializer
 )
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 # ── Throttle classes (rate limiting) ──────────────────────────────────────────
@@ -27,20 +30,22 @@ class ProductListAPIView(generics.ListCreateAPIView):
     POST /api/products/  — Create a new product (validated, rate-limited).
 
     Query parameters:
-        ?category=Hoodies      — Filter by category
-        ?featured=true         — Filter featured products
-        ?newArrival=true       — Filter new arrivals
-        ?search=cargo          — Full-text search on name and description
-        ?ordering=-price       — Order by price descending
-        ?page=2                — Pagination
+        ?category=Hoodies          — Filter by category
+        ?collections__slug=summer  — Filter by collection slug
+        ?featured=true             — Filter featured products
+        ?newArrival=true           — Filter new arrivals
+        ?search=cargo              — Full-text search on name and description
+        ?ordering=-price           — Order by price descending
+        ?page=2                    — Pagination
     """
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
     pagination_class = PageNumberPagination
+    permission_classes = [IsAdminOrReadOnly]
 
     # Filtering & search
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'featured', 'newArrival']
+    filterset_fields = ['category', 'featured', 'newArrival', 'collections__slug']
     search_fields = ['name', 'description', 'category']
     ordering_fields = ['price', 'created_at', 'name', 'stock']
 
@@ -59,6 +64,7 @@ class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_throttles(self):
         if self.request.method in ('PATCH', 'PUT', 'DELETE'):
@@ -76,6 +82,7 @@ class CollectionListAPIView(generics.ListCreateAPIView):
     queryset = Collection.objects.all().order_by('-created_at')
     serializer_class = CollectionSerializer
     pagination_class = None  # Show all at once (collections are usually few)
+    permission_classes = [IsAdminOrReadOnly]
 
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'description']
@@ -94,6 +101,7 @@ class CollectionDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
     def get_throttles(self):
         if self.request.method in ('PATCH', 'PUT', 'DELETE'):
@@ -115,6 +123,9 @@ class RegisterView(generics.CreateAPIView):
             return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -130,3 +141,27 @@ class MyOrdersView(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+class NewsletterSubscribeView(generics.CreateAPIView):
+    """
+    POST /api/newsletter/subscribe/ — Subscribe an email to the newsletter.
+    Returns 201 on success, 400 if already subscribed or invalid email.
+    """
+    serializer_class = NewsletterSubscriptionSerializer
+    permission_classes = (AllowAny,)
+
+    def get_throttles(self):
+        return [StrictAnonThrottle()]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "Successfully subscribed! Welcome to the TrueFIT community."},
+                status=status.HTTP_201_CREATED
+            )
+        # Surface the first error cleanly
+        first_error = next(iter(serializer.errors.values()))[0]
+        return Response({"error": str(first_error)}, status=status.HTTP_400_BAD_REQUEST)

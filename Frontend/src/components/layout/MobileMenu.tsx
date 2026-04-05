@@ -47,6 +47,30 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
             Shop
           </button>
           <button
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('newArrival', 'true');
+              window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+              window.dispatchEvent(new Event('search-change'));
+              handleNavigate('shop');
+            }}
+            className="block text-2xl font-bold uppercase tracking-wide hover:text-gray-600 transition-colors">
+
+            New Arrivals
+          </button>
+          <button
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('featured', 'true');
+              window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+              window.dispatchEvent(new Event('search-change'));
+              handleNavigate('shop');
+            }}
+            className="block text-2xl font-bold uppercase tracking-wide hover:text-gray-600 transition-colors">
+
+            Best Sellers
+          </button>
+          <button
             onClick={() => handleNavigate('collections')}
             className="block text-2xl font-bold uppercase tracking-wide hover:text-gray-600 transition-colors">
 

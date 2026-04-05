@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Collection, Order, OrderItem
+from .models import Product, Collection, Order, OrderItem, NewsletterSubscription
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
@@ -24,3 +24,9 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at')
     search_fields = ('full_name', 'email', 'phone')
     inlines = [OrderItemInline]
+
+@admin.register(NewsletterSubscription)
+class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'created_at')
+    search_fields = ('email',)
+    readonly_fields = ('email', 'created_at')

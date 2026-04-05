@@ -28,7 +28,7 @@ export function Filters({
 
   const sizes = ['S', 'M', 'L', 'XL', '28', '30', '32', '34'];
   const colors = ['Black', 'White', 'Beige', 'Grey', 'Blue', 'Green'];
-  const prices = ['Under $50', '$50 - $100', '$100 - $200', 'Over $200'];
+  const prices = ['Under KSH 5,000', 'KSH 5,000 - KSH 10,000', 'KSH 10,000 - KSH 20,000', 'Over KSH 20,000'];
   const toggleFilter = (key: keyof FilterState, value: string) => {
     if (key === 'priceRange') {
       onChange({

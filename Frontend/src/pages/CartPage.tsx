@@ -64,21 +64,21 @@ export function CartPage({ onNavigate }: CartPageProps) {
             <div className="space-y-4 mb-8 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">Ksh {subtotal.toLocaleString()}</span>
+                <span className="font-medium">KSH {subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
                 <span className="font-medium">
-                  {shipping === 0 ? 'Free' : `Ksh ${shipping.toLocaleString()}`}
+                  {shipping === 0 ? 'Free' : `KSH ${shipping.toLocaleString()}`}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax</span>
-                <span className="font-medium">Ksh {tax.toLocaleString()}</span>
+                <span className="font-medium">KSH {tax.toLocaleString()}</span>
               </div>
               <div className="border-t border-gray-200 pt-4 flex justify-between text-base font-bold">
                 <span>Total</span>
-                <span>Ksh {total.toLocaleString()}</span>
+                <span>KSH {total.toLocaleString()}</span>
               </div>
             </div>
 
@@ -88,7 +88,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
 
             <p className="text-xs text-center text-gray-500 mt-4">
               Shipping calculated at checkout. Free shipping on orders over
-              Ksh 10,000.
+              KSH 10,000.
             </p>
           </div>
         </div>

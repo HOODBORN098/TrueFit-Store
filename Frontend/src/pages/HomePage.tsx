@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ui/ProductCard';
+import { NewsletterForm } from '../components/ui/NewsletterForm';
 import { Page, Product } from '../types';
 import { fetchProducts } from '../api';
 
@@ -36,22 +37,22 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
 
   const slides = [
     {
-      image: "https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=2070",
-      title: "Elegance is Elimination",
-      subtitle: "Winter Collection 2026",
-      description: "Discover our latest collection of premium essentials. Designed for the modern minimalist."
+      image: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?auto=format&fit=crop&q=80&w=2070",
+      title: "Master the Minimal",
+      subtitle: "The 2026 Edit",
+      description: "Precision-cut tailoring meets innovative fabrics. Kenya's premier cornerstone pieces of a modern wardrobe."
     },
     {
-      image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=2000",
+      image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&q=80&w=2070",
       title: "Obsidian Series",
       subtitle: "New Arrivals",
-      description: "A masterpiece of tailoring, featuring our deep velvet and structured shoulders."
+      description: "A study in depth and texture. Local craftsmanship featuring our signature deep-dye velvet and structured silhouettes."
     },
     {
-      image: "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&q=80&w=2000",
-      title: "The Art of Texture",
-      subtitle: "Luxury Fabrics",
-      description: "Italian cashmere and Japanese denim. Quality you can feel in every stitch."
+      image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=2000",
+      title: "True to Fit",
+      subtitle: "Quality First",
+      description: "Luxury fabrics designed to be lived in and built to last. Premium standards, delivered across Kenya."
     }
   ];
 
@@ -101,9 +102,9 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               </p>
               <div className={`flex flex-col sm:flex-row gap-6 transition-all duration-700 delay-1000 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                 <Button
-                  variant="primary"
+                  variant="white"
                   size="lg"
-                  className="bg-white text-black hover:bg-gray-200 border-none min-w-[200px] shadow-xl"
+                  className="min-w-[200px] shadow-xl"
                   onClick={() => onNavigate('shop')}>
                   Shop Collection
                 </Button>
@@ -149,12 +150,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           ))}
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center text-white/50 z-20">
-          <div className="w-px h-12 bg-white/20 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-white animate-[scroll-hint_2s_infinite]" />
-          </div>
-        </div>
+
       </section>
 
       {/* Featured Products */}
@@ -204,10 +200,16 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
       <section className="py-4 px-6 md:px-20 max-w-[1920px] mx-auto">
         <div
           className="relative aspect-[21/9] md:aspect-[3/1] overflow-hidden group cursor-pointer"
-          onClick={() => onNavigate('collections')}>
+          onClick={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('featured', 'true');
+            window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+            window.dispatchEvent(new Event('search-change'));
+            onNavigate('shop');
+          }}>
 
           <img
-            src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=2000"
+            src="https://images.unsplash.com/photo-1558191053-8edcb01e1da3?auto=format&fit=crop&q=80&w=2000"
             alt="The Essentials"
             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
 
@@ -281,7 +283,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               Our Philosophy
             </span>
             <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-tight mb-8 leading-tight">
-              Designed for the Modern Minimalist
+              Designed for the Kenyan Minimalist
             </h2>
             <p className="text-gray-600 leading-relaxed mb-8 text-lg">
               We believe in the power of simplicity. Our collections are crafted
@@ -303,14 +305,14 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           <div className="order-1 lg:order-2 grid grid-cols-12 gap-4">
             <div className="col-span-7">
               <img
-                src="https://images.unsplash.com/photo-1594932224018-04004203a30f?auto=format&fit=crop&q=80&w=800"
+                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800"
                 alt="Editorial 1"
                 className="w-full aspect-[3/4] object-cover" />
 
             </div>
             <div className="col-span-5 pt-16">
               <img
-                src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=800"
+                src="https://images.unsplash.com/photo-1616150638538-ffb0679a3fc4?auto=format&fit=crop&q=80&w=800"
                 alt="Editorial 2"
                 className="w-full aspect-[3/4] object-cover mb-4" />
 
@@ -337,15 +339,8 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           Subscribe to receive updates on new arrivals, exclusive offers, and
           style inspiration.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="flex-1 border border-gray-200 px-6 py-4 text-sm focus:outline-none focus:border-black transition-colors" />
-
-          <Button variant="primary" size="lg">
-            Subscribe
-          </Button>
+        <div className="max-w-md mx-auto">
+          <NewsletterForm variant="dark" buttonLabel="Subscribe" />
         </div>
       </section>
     </div>);

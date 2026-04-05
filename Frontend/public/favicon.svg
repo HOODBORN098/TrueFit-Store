@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hanger Hook & Body -->
+  <path d="M50 25C50 25 45 25 45 30C45 35 50 35 50 35V40L15 70H85L50 40V35" stroke="#001F3F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 25C55 25 60 30 60 35" stroke="#001F3F" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Golden Checkmark -->
+  <path d="M35 60L50 75L90 35" stroke="#D4AF37" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

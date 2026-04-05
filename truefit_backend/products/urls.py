@@ -7,16 +7,17 @@ from .views import (
     RegisterView,
     OrderCreateView,
     MyOrdersView,
+    CustomTokenObtainPairView,
+    NewsletterSubscribeView,
 )
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
 urlpatterns = [
     # Auth
     path('auth/register/', RegisterView.as_view(), name='register'),
-    path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Products
@@ -30,4 +31,7 @@ urlpatterns = [
     # Orders
     path('orders/', MyOrdersView.as_view(), name='order-list'),
     path('orders/create/', OrderCreateView.as_view(), name='order-create'),
+
+    # Newsletter
+    path('newsletter/subscribe/', NewsletterSubscribeView.as_view(), name='newsletter-subscribe'),
 ]

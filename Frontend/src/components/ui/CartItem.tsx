@@ -21,7 +21,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       <div className="ml-6 flex flex-1 flex-col">
         <div className="flex justify-between text-base font-medium text-gray-900">
           <h3>{item.name}</h3>
-          <p className="ml-4">Ksh {(item.price * item.quantity).toLocaleString()}</p>
+          <p className="ml-4">KSH {(item.price * item.quantity).toLocaleString()}</p>
         </div>
         <p className="mt-1 text-sm text-gray-500">{item.category}</p>
 

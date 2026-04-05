@@ -65,10 +65,15 @@ export function CartProvider({ children }: {children: ReactNode;}) {
         item
         );
       }
+      
+      const sizeObj = product.sizes.find(s => (typeof s === 'string' ? s : s.name) === size);
+      const appliedPrice = sizeObj && typeof sizeObj !== 'string' ? sizeObj.price : product.price;
+      
       return [
       ...prev,
       {
         ...product,
+        price: appliedPrice,
         selectedSize: size,
         selectedColor: color,
         quantity

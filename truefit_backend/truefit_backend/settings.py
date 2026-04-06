@@ -14,8 +14,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-productio
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# FINAL FIX: Allow all hosts temporarily to debug
-ALLOWED_HOSTS = ['*']
+# Allowed hosts configuration
+_ALLOWED_HOSTS_ENV = os.getenv('ALLOWED_HOSTS', '*')
+ALLOWED_HOSTS = [h.strip() for h in _ALLOWED_HOSTS_ENV.split(',') if h.strip()]
 
 # ── Applications ──────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -158,3 +159,13 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+# Auto-migrate on startup for Render free tier
+import sys
+if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
+    try:
+        from django.core.management import call_command
+        print("Running migrations automatically...")
+        call_command('migrate', interactive=False)
+        print("Migrations completed successfully")
+    except Exception as e:
+        print(f"Migration error (non-fatal): {e}")

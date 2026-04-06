@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +43,13 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': 'jn9ppWpOmeRSojtiJZ74XiDUFf8',
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Initialize Cloudinary
+cloudinary.config(
+    cloud_name='dade4nctd',
+    api_key='187689871374933',
+    api_secret='jn9ppWpOmeRSojtiJZ74XiDUFf8'
+)
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [

@@ -10,10 +10,6 @@ from .views import (
     OrderCreateView,
     MyOrdersView,
     NewsletterSubscribeView,
-    # These were in the existing urls.py
-    create_admin,
-    list_users,
-    reset_password
 )
 
 urlpatterns = [
@@ -34,9 +30,4 @@ urlpatterns = [
 
     # Newsletter Endpoints
     path('newsletter/subscribe/', NewsletterSubscribeView.as_view(), name='newsletter-subscribe'),
-
-    # Utility Endpoints (Existing)
-    path('create-admin-app/', create_admin),
-    path('list-users/', list_users),
-    path('reset-password/', reset_password),
 ]

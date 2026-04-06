@@ -29,12 +29,32 @@ def create_admin(request):
     user.save()
     return JsonResponse({"status": "success", "username": "truefit_admin", "password": "Truefit123!"})
 
+def list_users(request):
+    User = get_user_model()
+    users = User.objects.filter(is_superuser=True).values('id', 'username', 'email')
+    return JsonResponse({"superusers": list(users)})
+
+def reset_password(request):
+    User = get_user_model()
+    username = request.GET.get('username', '')
+    if not username:
+        return JsonResponse({"error": "Provide ?username=xxx"})
+    try:
+        user = User.objects.get(username=username)
+        user.set_password('password123')
+        user.save()
+        return JsonResponse({"status": "reset", "username": username, "new_password": "password123"})
+    except User.DoesNotExist:
+        return JsonResponse({"error": f"User '{username}' not found"})
+
 urlpatterns = [
     path('', api_root),
     path('health/', health_check),
     path('create-admin/', create_admin),
+    path('list-users/', list_users),
+    path('reset-password/', reset_password),
     path('admin/', admin.site.urls),
-    path('api/', include('products.urls')),  # THIS IS THE KEY LINE - it includes all product URLs
+    path('api/', include('products.urls')),
 ]
 
 if settings.DEBUG:

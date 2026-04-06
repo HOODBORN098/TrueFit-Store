@@ -96,8 +96,11 @@ USE_I18N = True
 USE_TZ = True
 
 # ── Static / Media files ───────────────────────────────────────────────────────
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -158,6 +161,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
 # DEBUG PRINT FOR RENDER LOGS
 import sys
 print(f'ALLOWED_HOSTS = {ALLOWED_HOSTS}', file=sys.stderr)

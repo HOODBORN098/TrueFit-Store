@@ -2,13 +2,14 @@ from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from cloudinary.models import CloudinaryField
 
 class Product(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    image = CloudinaryField('image', blank=True, null=True)
     image_url = models.URLField(max_length=2000, blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
     category = models.CharField(max_length=100, default='Uncategorized')
@@ -48,7 +49,7 @@ def save_user_profile(sender, instance, **kwargs):
 class Collection(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
-    image = models.ImageField(upload_to='collection_images/', blank=True, null=True)
+    image = CloudinaryField('image', blank=True, null=True)
     image_url = models.URLField(max_length=2000, blank=True, null=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -83,7 +84,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-    product_name = models.CharField(max_length=200) # Snapshot in case product is deleted
+    product_name = models.CharField(max_length=200)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
     size = models.CharField(max_length=20)
@@ -91,7 +92,6 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product_name} ({self.size})"
-
 
 class NewsletterSubscription(models.Model):
     email = models.EmailField(unique=True)

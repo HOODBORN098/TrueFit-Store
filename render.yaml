@@ -3,7 +3,7 @@ services:
     name: truefit-backend
     runtime: python
     rootDir: truefit_backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     releaseCommand: python manage.py migrate --noinput
     startCommand: gunicorn truefit_backend.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
@@ -15,7 +15,11 @@ services:
         value: "True"
       - key: ALLOWED_HOSTS
         value: "*"
-      - key: DJANGO_SETTINGS_MODULE
-        value: "truefit_backend.settings"
+      - key: CLOUDINARY_CLOUD_NAME
+        value: "dade4nctd"
+      - key: CLOUDINARY_API_KEY
+        value: "187689871374933"
+      - key: CLOUDINARY_API_SECRET
+        value: "jn9ppWpOmeRSojtiJZ74XiDUFf8"
       - key: SECRET_KEY
-        generateValue: true
+        value: "django-insecure-8x9k2m4n6p8q0r2s4t6u8w0y2a4c6e8g0i2k4m6o8q0s2u4w6y8"

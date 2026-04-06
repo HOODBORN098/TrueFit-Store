@@ -62,13 +62,11 @@ def reset_password(request):
         return JsonResponse({"error": f"User '{username}' not found"})
 
 urlpatterns = [
-    path('', api_root),
-    path('health/', health_check),
-    path('create-admin/', create_admin),
+    # path('', api_root),  # Already handled in main urls.py or can be kept if needed
+    # path('health/', health_check),
+    path('create-admin-app/', create_admin), # Renamed to avoid collision if needed
     path('list-users/', list_users),
     path('reset-password/', reset_password),
-    path('admin/', admin.site.urls),
-    path('api/', include('products.urls')),
 ]
 
 # Serve static files in development

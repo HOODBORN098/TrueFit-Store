@@ -41,6 +41,7 @@ urlpatterns = [
     path('', api_root),
     path('health/', health_check),
     path('create-admin/', create_admin),
+    path('admin-test/', lambda request: JsonResponse({'status': 'admin-test-works'})),
     path('admin/', admin.site.urls),
     path('api/', include('products.urls')),
 ]

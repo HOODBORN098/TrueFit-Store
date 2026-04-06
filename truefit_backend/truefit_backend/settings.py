@@ -12,7 +12,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 # ── Core ──────────────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-production')
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = True
 
 # Allowed hosts configuration - Set to * for broad Render compatibility during debugging
 ALLOWED_HOSTS = ['*']
@@ -163,6 +163,31 @@ SIMPLE_JWT = {
 }
 
 # DEBUG PRINT FOR RENDER LOGS
+# LOGGING CONFIG FOR DEBUGGING RENDER ERRORS
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
 import sys
 print(f'ALLOWED_HOSTS = {ALLOWED_HOSTS}', file=sys.stderr)
 print(f'DEBUG = {DEBUG}', file=sys.stderr)

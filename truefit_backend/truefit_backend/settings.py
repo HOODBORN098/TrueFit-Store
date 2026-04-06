@@ -14,13 +14,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-productio
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# Read ALLOWED_HOSTS from env (comma-separated list)
-_ALLOWED_HOSTS_ENV = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.onrender.com')
-ALLOWED_HOSTS = [h.strip() for h in _ALLOWED_HOSTS_ENV.split(',') if h.strip()]
-
-# Add Render URL explicitly if on Render
-if 'RENDER' in os.environ:
-    ALLOWED_HOSTS.append('truefit-backend-9w1b.onrender.com')
+# CRITICAL FIX: Correct ALLOWED_HOSTS for Render
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.onrender.com',  # Allows any Render subdomain
+    'truefit-backend-9wt8.onrender.com',
+    'truefit-backend-9w1b.onrender.com',
+]
 
 # ── Applications ──────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -71,51 +72,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'truefit_backend.wsgi.application'
 
 # ── Database ───────────────────────────────────────────────────────────────────
-# Use DATABASE_URL for Render (PostgreSQL) or fallback to environment variables
+# Use DATABASE_URL for Render (PostgreSQL)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
-    # Production on Render with PostgreSQL
     DATABASES = {
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
 else:
-    # Local development fallback
-    _DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').strip().lower()
-    
-    if _DB_ENGINE == 'mysql':
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': os.getenv('DB_NAME', 'truefit_db'),
-                'USER': os.getenv('DB_USER', 'root'),
-                'PASSWORD': os.getenv('DB_PASSWORD', ''),
-                'HOST': os.getenv('DB_HOST', 'localhost'),
-                'PORT': os.getenv('DB_PORT', '3306'),
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                },
-            }
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
-    elif _DB_ENGINE == 'postgresql':
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('DB_NAME', 'truefit_db'),
-                'USER': os.getenv('DB_USER', 'truefit_user'),
-                'PASSWORD': os.getenv('DB_PASSWORD', 'truefit123'),
-                'HOST': os.getenv('DB_HOST', 'localhost'),
-                'PORT': os.getenv('DB_PORT', '5432'),
-            }
-        }
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+    }
 
 # ── Password Validation ────────────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
@@ -167,8 +137,12 @@ REST_FRAMEWORK = {
 }
 
 # ── CORS Configuration ─────────────────────────────────────────────────────────
-_CORS_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173,https://true-fit-store.vercel.app')
-CORS_ALLOWED_ORIGINS = [o.strip() for o in _CORS_ORIGINS_ENV.split(',') if o.strip()]
+# CRITICAL FIX: Add your Vercel frontend URL
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://true-fit-store.vercel.app',
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # ── Security Headers (production hardening) ────────────────────────────────────

@@ -1,15 +1,11 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
 from django.http import JsonResponse
-from django.views.generic import RedirectView
+from django.contrib.auth import get_user_model
 
-# Health check for Render
 def health_check(request):
     return JsonResponse({"status": "ok", "message": "TrueFIT API is running"})
 
-# Root API endpoint
 def api_root(request):
     return JsonResponse({
         "message": "Welcome to TrueFIT API",
@@ -17,18 +13,34 @@ def api_root(request):
             "products": "/api/products/",
             "collections": "/api/collections/",
             "admin": "/admin/",
-            "health": "/health/"
+            "health": "/health/",
+            "create-admin": "/create-admin/"
         }
     })
+
+def create_admin(request):
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username='truefit_admin',
+        defaults={
+            'email': 'admin@truefit.com',
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    if created:
+        user.set_password('Truefit123!')
+        user.save()
+        return JsonResponse({"status": "created", "username": "truefit_admin", "password": "Truefit123!"})
+    else:
+        user.set_password('Truefit123!')
+        user.save()
+        return JsonResponse({"status": "reset", "username": "truefit_admin", "password": "Truefit123!"})
 
 urlpatterns = [
     path('', api_root),
     path('health/', health_check),
-    path('admin/', admin.site.urls),  # Make sure this is correct
+    path('create-admin/', create_admin),
+    path('admin/', admin.site.urls),
     path('api/', include('products.urls')),
 ]
-
-# Serve static files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -34,7 +34,7 @@ urlpatterns = [
     path('health/', health_check),
     path('create-admin/', create_admin),
     path('admin/', admin.site.urls),
-    path('api/', include('products.urls')),
+    path('api/', include('products.urls')),  # THIS IS THE KEY LINE - it includes all product URLs
 ]
 
 if settings.DEBUG:

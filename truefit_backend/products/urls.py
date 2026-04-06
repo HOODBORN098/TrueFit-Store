@@ -1,37 +1,77 @@
-from django.urls import path
-from .views import (
-    ProductListAPIView,
-    ProductDetailAPIView,
-    CollectionListAPIView,
-    CollectionDetailAPIView,
-    RegisterView,
-    OrderCreateView,
-    MyOrdersView,
-    CustomTokenObtainPairView,
-    NewsletterSubscribeView,
-)
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
+
+# Health check for Render
+def health_check(request):
+    return JsonResponse({"status": "ok", "message": "TrueFIT API is running"})
+
+# Root API endpoint
+def api_root(request):
+    return JsonResponse({
+        "message": "Welcome to TrueFIT API",
+        "endpoints": {
+            "products": "/api/products/",
+            "collections": "/api/collections/",
+            "admin": "/admin/",
+            "health": "/health/"
+        }
+    })
+
+# Create a new admin user
+def create_admin(request):
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username='truefit_admin',
+        defaults={
+            'email': 'admin@truefit.com',
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    if created:
+        user.set_password('Truefit123!')
+        user.save()
+        return JsonResponse({"status": "created", "username": "truefit_admin", "password": "Truefit123!"})
+    else:
+        user.set_password('Truefit123!')
+        user.save()
+        return JsonResponse({"status": "reset", "username": "truefit_admin", "password": "Truefit123!"})
+
+# List all superusers
+def list_users(request):
+    User = get_user_model()
+    users = User.objects.filter(is_superuser=True).values('id', 'username', 'email')
+    return JsonResponse({"superusers": list(users)})
+
+# Reset password for a specific user
+def reset_password(request):
+    User = get_user_model()
+    username = request.GET.get('username', '')
+    if not username:
+        return JsonResponse({"error": "Provide ?username=xxx"})
+    try:
+        user = User.objects.get(username=username)
+        user.set_password('password123')
+        user.save()
+        return JsonResponse({"status": "reset", "username": username, "new_password": "password123"})
+    except User.DoesNotExist:
+        return JsonResponse({"error": f"User '{username}' not found"})
 
 urlpatterns = [
-    # Auth
-    path('auth/register/', RegisterView.as_view(), name='register'),
-    path('auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
-    # Products
-    path('products/', ProductListAPIView.as_view(), name='product-list'),
-    path('products/<int:pk>/', ProductDetailAPIView.as_view(), name='product-detail'),
-
-    # Collections
-    path('collections/', CollectionListAPIView.as_view(), name='collection-list'),
-    path('collections/<int:pk>/', CollectionDetailAPIView.as_view(), name='collection-detail'),
-
-    # Orders
-    path('orders/', MyOrdersView.as_view(), name='order-list'),
-    path('orders/create/', OrderCreateView.as_view(), name='order-create'),
-
-    # Newsletter
-    path('newsletter/subscribe/', NewsletterSubscribeView.as_view(), name='newsletter-subscribe'),
+    path('', api_root),
+    path('health/', health_check),
+    path('create-admin/', create_admin),
+    path('list-users/', list_users),
+    path('reset-password/', reset_password),
+    path('admin/', admin.site.urls),
+    path('api/', include('products.urls')),
 ]
+
+# Serve static files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

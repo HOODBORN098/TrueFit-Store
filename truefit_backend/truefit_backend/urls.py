@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 
@@ -14,7 +16,6 @@ def api_root(request):
             "collections": "/api/collections/",
             "admin": "/admin/",
             "health": "/health/",
-            "create-admin": "/create-admin/"
         }
     })
 
@@ -22,26 +23,20 @@ def create_admin(request):
     User = get_user_model()
     user, created = User.objects.get_or_create(
         username='truefit_admin',
-        defaults={
-            'email': 'admin@truefit.com',
-            'is_staff': True,
-            'is_superuser': True
-        }
+        defaults={'email': 'admin@truefit.com', 'is_staff': True, 'is_superuser': True}
     )
-    if created:
-        user.set_password('Truefit123!')
-        user.save()
-        return JsonResponse({"status": "created", "username": "truefit_admin", "password": "Truefit123!"})
-    else:
-        user.set_password('Truefit123!')
-        user.save()
-        return JsonResponse({"status": "reset", "username": "truefit_admin", "password": "Truefit123!"})
+    user.set_password('Truefit123!')
+    user.save()
+    return JsonResponse({"status": "success", "username": "truefit_admin", "password": "Truefit123!"})
 
 urlpatterns = [
     path('', api_root),
     path('health/', health_check),
     path('create-admin/', create_admin),
-    path('admin-test/', lambda request: JsonResponse({'status': 'admin-test-works'})),
     path('admin/', admin.site.urls),
     path('api/', include('products.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

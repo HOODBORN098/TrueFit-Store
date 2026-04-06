@@ -14,7 +14,6 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-productio
 
 DEBUG = True
 
-# Allowed hosts configuration - Set to * for broad Render compatibility during debugging
 ALLOWED_HOSTS = ['*']
 
 # ── Applications ──────────────────────────────────────────────────────────────
@@ -25,12 +24,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
     'products.apps.ProductsConfig',
 ]
+
+# ── Cloudinary Configuration (for image uploads from PC) ──────────────────────
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dade4nctd',
+    'API_KEY': '187689871374933',
+    'API_SECRET': 'jn9ppWpOmeRSojtiJZ74XiDUFf8',
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
@@ -66,7 +75,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'truefit_backend.wsgi.application'
 
 # ── Database ───────────────────────────────────────────────────────────────────
-# Use DATABASE_URL for Render (PostgreSQL)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
@@ -98,9 +106,7 @@ USE_TZ = True
 # ── Static / Media files ───────────────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -134,7 +140,6 @@ REST_FRAMEWORK = {
 }
 
 # ── CORS Configuration ─────────────────────────────────────────────────────────
-# CRITICAL FIX: Add your Vercel frontend URL
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -142,7 +147,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# ── Security Headers (production hardening) ────────────────────────────────────
+# ── Security Headers ──────────────────────────────────────────────────────────
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
@@ -161,33 +166,3 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
-
-# DEBUG PRINT FOR RENDER LOGS
-# LOGGING CONFIG FOR DEBUGGING RENDER ERRORS
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-    },
-}
-
-import sys
-print(f'ALLOWED_HOSTS = {ALLOWED_HOSTS}', file=sys.stderr)
-print(f'DEBUG = {DEBUG}', file=sys.stderr)

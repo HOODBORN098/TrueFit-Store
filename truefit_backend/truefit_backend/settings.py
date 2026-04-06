@@ -15,8 +15,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-productio
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Read ALLOWED_HOSTS from env (comma-separated list)
-_ALLOWED_HOSTS_ENV = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost')
+_ALLOWED_HOSTS_ENV = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in _ALLOWED_HOSTS_ENV.split(',') if h.strip()]
+
+# Add Render URL explicitly if on Render
+if 'RENDER' in os.environ:
+    ALLOWED_HOSTS.append('truefit-backend-9w1b.onrender.com')
 
 # ── Applications ──────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -163,7 +167,7 @@ REST_FRAMEWORK = {
 }
 
 # ── CORS Configuration ─────────────────────────────────────────────────────────
-_CORS_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+_CORS_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173,https://true-fit-store.vercel.app')
 CORS_ALLOWED_ORIGINS = [o.strip() for o in _CORS_ORIGINS_ENV.split(',') if o.strip()]
 CORS_ALLOW_CREDENTIALS = True
 

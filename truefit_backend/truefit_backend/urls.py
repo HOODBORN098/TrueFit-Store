@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from django.views.generic import RedirectView
 
 # Health check for Render
 def health_check(request):
@@ -21,12 +22,13 @@ def api_root(request):
     })
 
 urlpatterns = [
-    path('', api_root),  # Root URL now returns JSON instead of 404
-    path('health/', health_check),  # Health check endpoint
-    path('admin/', admin.site.urls),
+    path('', api_root),
+    path('health/', health_check),
+    path('admin/', admin.site.urls),  # Make sure this is correct
     path('api/', include('products.urls')),
 ]
 
-# Serve media files in development
+# Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
-    'products',
+    'products.apps.ProductsConfig',
 ]
 
 # ── Middleware ────────────────────────────────────────────────────────────────

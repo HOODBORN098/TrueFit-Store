@@ -14,14 +14,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-before-productio
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# CRITICAL FIX: Correct ALLOWED_HOSTS for Render
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.onrender.com',  # Allows any Render subdomain
-    'truefit-backend-9wt8.onrender.com',
-    'truefit-backend-9w1b.onrender.com',
-]
+# FINAL FIX: Allow all hosts temporarily to debug
+ALLOWED_HOSTS = ['*']
 
 # ── Applications ──────────────────────────────────────────────────────────────
 INSTALLED_APPS = [

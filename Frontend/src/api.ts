@@ -225,6 +225,28 @@ export async function fetchMyOrders(): Promise<any[]> {
     });
 }
 
+// ─── Payment & M-Pesa ────────────────────────────────────────────────────────
+
+/**
+ * Trigger an M-Pesa STK Push pop-up on the customer's phone.
+ */
+export async function triggerMpesaPush(orderId: number, phone: string): Promise<any> {
+    return apiFetch<any>('/api/payment/mpesa/', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: orderId, phone }),
+    });
+}
+
+/**
+ * Fetch a single order (used to poll status).
+ */
+export async function fetchOrder(orderId: number | string): Promise<any> {
+    // Note: If you add a specific detail endpoint like /api/orders/<id>/, update this path.
+    // For now, we can check the status via the my-orders list or add a detail view.
+    const orders = await fetchMyOrders();
+    return orders.find(o => o.id === orderId);
+}
+
 // ─── Newsletter ──────────────────────────────────────────────────────────────
 
 /**

@@ -197,6 +197,11 @@ class MpesaSTKPushView(generics.CreateAPIView):
         callback_url = request.build_absolute_uri('/api/payment/mpesa-callback/')
         
         response = initiate_stk_push(phone, amount, order_id, callback_url)
+        
+        if response.get('ResponseCode') == '0':
+            order.mpesa_checkout_request_id = response.get('CheckoutRequestID')
+            order.save(update_fields=['mpesa_checkout_request_id'])
+            
         return Response(response, status=status.HTTP_200_OK)
 
 class MpesaCallbackView(generics.CreateAPIView):
@@ -205,11 +210,16 @@ class MpesaCallbackView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         callback_data = request.data.get('Body', {}).get('stkCallback', {})
         res_code = callback_data.get('ResultCode')
+        checkout_request_id = callback_data.get('CheckoutRequestID')
         
         if res_code == 0:
             logger.info(f"Mpesa Callback Success: {callback_data}")
-            # Safaricom passed the payment. In a production app, extract CheckoutRequestID,
-            # query your Order model, and update it to Paid.
+            try:
+                order = Order.objects.get(mpesa_checkout_request_id=checkout_request_id)
+                order.status = 'paid'
+                order.save(update_fields=['status'])
+            except Order.DoesNotExist:
+                logger.error(f"Order not found for CheckoutRequestID: {checkout_request_id}")
         else:
             logger.warning(f"Mpesa Callback Failed: {callback_data.get('ResultDesc')}")
             

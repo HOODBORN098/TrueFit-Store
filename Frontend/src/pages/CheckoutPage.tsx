@@ -6,7 +6,7 @@ import { Page } from '../types';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from '../context/ToastContext';
-import { createOrder } from '../api';
+import { createOrder, triggerMpesaPush, fetchMyOrders } from '../api';
 
 // Replace with your actual publishable key
 const stripePromise = loadStripe('pk_test_placeholder');
@@ -160,7 +160,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     }
     setMpesaLoading(true);
     try {
-      // 1. Create order in our backend using authenticated user's contextual data
+      // 1. Create order
       const orderData = {
           full_name: `${user?.firstName} ${user?.lastName}`.trim() || 'Customer',
           email: user?.email || '',
@@ -182,14 +182,37 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
       const orderRes = await createOrder(orderData);
       
-      if (orderRes) {
-        showToast(`Order #${orderRes.id} placed successfully!`, 'success');
-        clearCart();
-        onNavigate('home');
+      if (orderRes && orderRes.id) {
+        // 2. Trigger STK Push
+        showToast('Processing M-Pesa... Please check your phone.', 'info');
+        const mpesaRes = await triggerMpesaPush(orderRes.id, phoneNumber);
+        
+        if (mpesaRes.ResponseCode === '0') {
+            // 3. Start Polling for status change
+            let attempts = 0;
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                const orders = await fetchMyOrders();
+                const currentOrder = orders.find(o => o.id === orderRes.id);
+                
+                if (currentOrder && currentOrder.status === 'paid') {
+                    clearInterval(pollInterval);
+                    showToast('Payment Successful!', 'success');
+                    clearCart();
+                    onNavigate('home');
+                } else if (attempts > 20) { // Time out after ~60 seconds
+                    clearInterval(pollInterval);
+                    setMpesaLoading(false);
+                    showToast('Payment verification timed out. If you paid, it will update shortly.', 'warning');
+                }
+            }, 3000);
+        } else {
+            showToast(mpesaRes.errorMessage || 'M-Pesa push failed', 'error');
+            setMpesaLoading(false);
+        }
       }
-    } catch (error) {
-      showToast('Failed to create order', 'error');
-    } finally {
+    } catch (error: any) {
+      showToast(error.message || 'Failed to process payment', 'error');
       setMpesaLoading(false);
     }
   };

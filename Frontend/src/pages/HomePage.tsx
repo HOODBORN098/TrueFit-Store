@@ -38,9 +38,9 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
   const slides = [
     {
       image: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?auto=format&fit=crop&q=80&w=2070",
-      title: "Master the Minimal",
+      title: "Minimalistic",
       subtitle: "The 2026 Edit",
-      description: "Precision-cut tailoring meets innovative fabrics. Kenya's premier cornerstone pieces of a modern wardrobe."
+      description: "Precision-cut tailoring meets innovative fabrics. Kenya's premier pieces of a modern wardrobe."
     },
     {
       image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&q=80&w=2070",
@@ -55,7 +55,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
       description: "Luxury fabrics designed to be lived in and built to last. Premium standards, delivered across Kenya."
     }
   ];
-  
+
   const categories = [
     { name: 'T-Shirts', id: 'T-Shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=400' },
     { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=400' },
@@ -147,17 +147,17 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
         <div className="absolute bottom-0 left-0 right-0 z-30 pb-4 overflow-x-auto no-scrollbar scroll-smooth bg-gradient-to-t from-black/60 to-transparent">
           <div className="flex items-center justify-start md:justify-center gap-6 px-6 md:px-12 min-w-max pb-2">
             {categories.map((cat) => (
-              <button 
-                key={cat.name} 
+              <button
+                key={cat.name}
                 onClick={() => handleCategoryClick(cat.id)}
                 className="flex flex-col items-center group cursor-pointer transform transition-transform active:scale-95"
               >
                 <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border border-white/30 backdrop-blur-sm p-1 group-hover:border-white transition-all duration-300 shadow-xl bg-black/5">
                   <div className="w-full h-full rounded-full overflow-hidden">
-                    <img 
-                      src={cat.image} 
-                      alt={cat.name} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"
                     />
                   </div>

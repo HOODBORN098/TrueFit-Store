@@ -39,7 +39,7 @@ INSTALLED_APPS = [
 # ── Cloudinary Configuration (for image uploads from PC) ──────────────────────
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dade4nctd',
-    'API_KEY': '187689871374933',
+    'API_KEY': '187889871374933',
     'API_SECRET': 'jn9ppWpOmeRSojtiJZ74XiDUFf8',
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
@@ -47,7 +47,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # Initialize Cloudinary
 cloudinary.config(
     cloud_name='dade4nctd',
-    api_key='187689871374933',
+    api_key='187889871374933',
     api_secret='jn9ppWpOmeRSojtiJZ74XiDUFf8'
 )
 

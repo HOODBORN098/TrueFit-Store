@@ -89,55 +89,52 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
     <div className="w-full">
       {/* Hero Section */}
       {/* Hero Section */}
-      <section className="relative h-[75vh] md:h-[95vh] w-full overflow-hidden bg-black">
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-          >
-            <div className="absolute inset-0">
-              <img
-                src={slide.image}
-                alt={slide.title}
-                className={`w-full h-full object-cover transition-transform duration-[10000ms] ${index === currentSlide ? 'scale-110' : 'scale-100'}`}
-              />
-              <div className="absolute inset-0 bg-black/40 mix-blend-multiply" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-            </div>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-12 pb-[26rem] md:pt-32 md:pb-[32rem]">
-              <span className={`inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-300 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                {slide.subtitle}
-              </span>
-              <h1 className={`text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter mb-8 font-serif transition-all duration-700 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                {slide.title.includes(' ') ? (
-                  <>
-                    {slide.title.split(' ')[0]}<br className="hidden md:block" /> {slide.title.split(' ').slice(1).join(' ')}
-                  </>
-                ) : slide.title}
-              </h1>
-              <p className={`text-lg md:text-xl font-light mb-12 max-w-2xl mx-auto text-white/90 transition-all duration-700 delay-700 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                {slide.description}
-              </p>
-              <div className={`flex flex-col sm:flex-row gap-6 transition-all duration-700 delay-1000 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                <Button
-                  variant="white"
-                  size="lg"
-                  className="min-w-[200px] shadow-xl"
-                  onClick={() => onNavigate('shop')}>
-                  Shop Collection
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-white border-white hover:bg-white/10 min-w-[200px] backdrop-blur-sm"
-                  onClick={() => onNavigate('collections')}>
-                  View Lookbook
-                </Button>
-              </div>
+      <section className="relative h-[75vh] md:h-[95vh] w-full overflow-hidden bg-black">
+        <div className="absolute inset-0 z-10Opacity-100">
+          <div className="absolute inset-0">
+            <img
+              src={slides[0].image}
+              alt={slides[0].title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          </div>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-12 pb-[26rem] md:pt-32 md:pb-[32rem]">
+            <span className="inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700">
+              {slides[0].subtitle}
+            </span>
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter mb-8 font-serif transition-all duration-700">
+              {slides[0].title.includes(' ') ? (
+                <>
+                  {slides[0].title.split(' ')[0]}<br className="hidden md:block" /> {slides[0].title.split(' ').slice(1).join(' ')}
+                </>
+              ) : slides[0].title}
+            </h1>
+            <p className="text-lg md:text-xl font-light mb-12 max-w-2xl mx-auto text-white/90 transition-all duration-700">
+              {slides[0].description}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 transition-all duration-700">
+              <Button
+                variant="white"
+                size="lg"
+                className="min-w-[200px] shadow-xl"
+                onClick={() => onNavigate('shop')}>
+                Shop Collection
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-white border-white hover:bg-white/10 min-w-[200px] backdrop-blur-sm"
+                onClick={() => onNavigate('collections')}>
+                View Lookbook
+              </Button>
             </div>
           </div>
-        ))}
+        </div>
+
 
 
 

@@ -57,14 +57,14 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
   ];
   
   const categories = [
-    { name: 'T-Shirts', id: 'T-Shirts', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Jackets', id: 'Jackets', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Bottoms', id: 'Bottoms', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1624371414361-e6e8ea0c7bc1?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1601612628452-9e99ced43524?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=300' },
+    { name: 'T-Shirts', id: 'T-Shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Jackets', id: 'Jackets', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Bottoms', id: 'Bottoms', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1588850561448-4f921a302071?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=400' },
   ];
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-32 pb-72">
+            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-32 pb-[32rem]">
               <span className={`inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-300 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                 {slide.subtitle}
               </span>
@@ -158,7 +158,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        <div className="absolute bottom-64 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
           {slides.map((_, index) => (
             <button
               key={index}

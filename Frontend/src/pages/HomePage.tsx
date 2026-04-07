@@ -105,7 +105,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-32 pb-72 md:pb-[32rem]">
+            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-12 pb-[26rem] md:pt-32 md:pb-[32rem]">
               <span className={`inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-300 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                 {slide.subtitle}
               </span>
@@ -158,7 +158,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-64 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        <div className="absolute bottom-[22rem] md:bottom-64 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
           {slides.map((_, index) => (
             <button
               key={index}

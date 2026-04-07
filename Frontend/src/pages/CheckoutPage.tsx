@@ -138,7 +138,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     );
   };
 
-  const shipping = subtotal > 10000 ? 0 : 500;
+  const userCity = shippingInfo.city.toLowerCase();
+  const userAddress = shippingInfo.address.toLowerCase();
+  const isEgerton = userCity.includes('egerton') || userCity.includes('njoro') || userAddress.includes('egerton') || userAddress.includes('njoro');
+
+  const shipping = isEgerton ? 0 : (subtotal > 10000 ? 0 : 500);
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 

@@ -10,6 +10,8 @@ from .views import (
     OrderCreateView,
     MyOrdersView,
     NewsletterSubscribeView,
+    MpesaSTKPushView,
+    MpesaCallbackView,
 )
 
 urlpatterns = [
@@ -28,6 +30,10 @@ urlpatterns = [
     # Orders Endpoints
     path('orders/create/', OrderCreateView.as_view(), name='order-create'),
     path('orders/my-orders/', MyOrdersView.as_view(), name='my-orders'),
+
+    # Payment Endpoints
+    path('payment/mpesa/', MpesaSTKPushView.as_view(), name='mpesa-push'),
+    path('payment/mpesa-callback/', MpesaCallbackView.as_view(), name='mpesa-callback'),
 
     # Newsletter Endpoints
     path('newsletter/subscribe/', NewsletterSubscribeView.as_view(), name='newsletter-subscribe'),

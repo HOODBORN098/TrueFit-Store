@@ -2,6 +2,7 @@ from rest_framework import serializers
 from products.models import Product, Collection, Order, OrderItem, NewsletterSubscription
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db import transaction
 import re
 
 
@@ -158,11 +159,21 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('id', 'user', 'status', 'created_at', 'updated_at')
 
+    @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         user = self.context['request'].user if self.context['request'].user.is_authenticated else None
         order = Order.objects.create(user=user, **validated_data)
         for item_data in items_data:
+            product = item_data.get('product')
+            quantity = item_data.get('quantity', 1)
+            
+            if product:
+                if product.stock < quantity:
+                    raise serializers.ValidationError(f"Insufficient stock for {product.name}. Available: {product.stock}.")
+                product.stock -= quantity
+                product.save(update_fields=['stock'])
+                
             OrderItem.objects.create(order=order, **item_data)
         return order
 

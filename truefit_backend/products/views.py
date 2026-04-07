@@ -163,5 +163,54 @@ class NewsletterSubscribeView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED
             )
         # Surface the first error cleanly
+        # Surface the first error cleanly
         first_error = next(iter(serializer.errors.values()))[0]
         return Response({"error": str(first_error)}, status=status.HTTP_400_BAD_REQUEST)
+
+# ── M-Pesa Payment Views ────────────────────────────────────────────────────────
+
+from .mpesa import initiate_stk_push
+import logging
+
+logger = logging.getLogger(__name__)
+
+class MpesaSTKPushView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+    def get_throttles(self):
+        return [StrictAnonThrottle()]
+
+    def post(self, request, *args, **kwargs):
+        order_id = request.data.get('order_id')
+        phone = request.data.get('phone')
+        
+        if not order_id or not phone:
+            return Response({"error": "order_id and phone are required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        amount = order.total_amount
+        # Note: in production, replace request.build_absolute_uri with your actual deployed backend URL
+        # because Daraja requires a publicly accessible webhook to deliver the callback.
+        callback_url = request.build_absolute_uri('/api/payment/mpesa-callback/')
+        
+        response = initiate_stk_push(phone, amount, order_id, callback_url)
+        return Response(response, status=status.HTTP_200_OK)
+
+class MpesaCallbackView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        callback_data = request.data.get('Body', {}).get('stkCallback', {})
+        res_code = callback_data.get('ResultCode')
+        
+        if res_code == 0:
+            logger.info(f"Mpesa Callback Success: {callback_data}")
+            # Safaricom passed the payment. In a production app, extract CheckoutRequestID,
+            # query your Order model, and update it to Paid.
+        else:
+            logger.warning(f"Mpesa Callback Failed: {callback_data.get('ResultDesc')}")
+            
+        return Response({"ResultCode": 0, "ResultDesc": "Accepted"})

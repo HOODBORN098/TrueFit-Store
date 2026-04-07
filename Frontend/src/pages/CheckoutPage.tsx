@@ -203,7 +203,7 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
                 } else if (attempts > 20) { // Time out after ~60 seconds
                     clearInterval(pollInterval);
                     setMpesaLoading(false);
-                    showToast('Payment verification timed out. If you paid, it will update shortly.', 'warning');
+                    showToast('Payment verification timed out. If you paid, it will update shortly.', 'info');
                 }
             }, 3000);
         } else {

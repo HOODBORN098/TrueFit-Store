@@ -58,13 +58,13 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
   
   const categories = [
     { name: 'T-Shirts', id: 'T-Shirts', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Jackets', id: 'Jackets', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Jackets', id: 'Jackets', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=300' },
     { name: 'Bottoms', id: 'Bottoms', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?auto=format&fit=crop&q=80&w=300' },
-    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1539008835270-bc04e67303f2?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1624371414361-e6e8ea0c7bc1?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1601612628452-9e99ced43524?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=300' },
   ];
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6 pb-48">
+            <div className="absolute inset-0 flex flex-col items-center justify-start text-center text-white px-6 pt-32 pb-72">
               <span className={`inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-300 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                 {slide.subtitle}
               </span>
@@ -170,7 +170,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
         </div>
 
         {/* Category Shortcuts */}
-        <div className="absolute bottom-4 left-0 right-0 z-30 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="absolute bottom-0 left-0 right-0 z-30 pb-4 overflow-x-auto no-scrollbar scroll-smooth bg-gradient-to-t from-black/60 to-transparent">
           <div className="flex items-center justify-start md:justify-center gap-6 px-12 min-w-max pb-2">
             {categories.map((cat) => (
               <button 

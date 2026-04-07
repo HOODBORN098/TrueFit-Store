@@ -92,11 +92,21 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
   const userCity = shippingInfo.city.toLowerCase();
   const userAddress = shippingInfo.address.toLowerCase();
+  
   const isEgerton = userCity.includes('egerton') || userCity.includes('njoro') || userAddress.includes('egerton') || userAddress.includes('njoro');
+  const isNakuru = userCity.includes('nakuru') || userAddress.includes('nakuru');
 
-  const shipping = isEgerton ? 0 : (subtotal > 10000 ? 0 : 500);
+  const getShippingFee = () => {
+    if (!shippingInfo.city && !shippingInfo.address) return null;
+    if (isEgerton) return 0;
+    if (isNakuru) return 200;
+    if (subtotal > 10000) return 0;
+    return 500;
+  };
+
+  const shipping = getShippingFee();
   const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + (shipping ?? 500) + tax;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -334,7 +344,14 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
             </div>
             <div className="border-t border-gray-200 pt-6 space-y-3 text-sm">
               <div className="flex justify-between"><span>Subtotal</span><span>KSH {subtotal.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? 'Free' : `KSH ${shipping.toLocaleString()}`}</span></div>
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span>
+                  {shipping === null 
+                    ? <span className="text-gray-400 italic">Enter location</span> 
+                    : (shipping === 0 ? 'Free' : `KSH ${shipping.toLocaleString()}`)}
+                </span>
+              </div>
               <div className="flex justify-between"><span>Tax</span><span>KSH {tax.toLocaleString()}</span></div>
               <div className="border-t border-gray-200 pt-4 flex justify-between text-lg font-bold">
                 <span>Total</span><span>KSH {total.toLocaleString()}</span>

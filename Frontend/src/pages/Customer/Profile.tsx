@@ -19,7 +19,10 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
             setLoading(true);
             fetchMyOrders()
                 .then(data => setOrders(data))
-                .catch(err => console.error('Failed to fetch orders:', err))
+                .catch(err => {
+                    console.error('Failed to fetch orders:', err);
+                    setOrders([]); // Or handle error state
+                })
                 .finally(() => setLoading(false));
         }
     }, [activeTab, user]);
@@ -115,7 +118,9 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                                 </div>
                             ) : (
                                 <div className="text-center py-20 border border-dashed border-gray-200">
-                                    <p className="text-gray-400 uppercase tracking-widest text-sm mb-4">No orders yet</p>
+                                    <p className="text-gray-400 uppercase tracking-widest text-sm mb-4">
+                                        {orders === null ? 'Failed to load orders' : 'No orders yet'}
+                                    </p>
                                     <Button size="sm" onClick={() => onNavigate('shop')}>Start Shopping</Button>
                                 </div>
                             )}

@@ -19,12 +19,25 @@ export function Filters({
   isMobile = false
 }: FiltersProps) {
   const categories = [
-  'T-Shirts',
-  'Pants',
-  'Outerwear',
-  'Knitwear',
-  'Footwear',
-  'Accessories'];
+    'T-Shirts',
+    'Shirts',
+    'Hoodies',
+    'Sweaters',
+    'Jackets',
+    'Outerwear',
+    'Tracksuits',
+    'Bottoms',
+    'Pants',
+    'Shorts',
+    'Dresses',
+    'Jumpsuits',
+    'Knitwear',
+    'Footwear',
+    'Caps',
+    'Bags',
+    'Jewelry',
+    'Accessories',
+  ];
 
   const sizes = ['S', 'M', 'L', 'XL', '28', '30', '32', '34'];
   const colors = ['Black', 'White', 'Beige', 'Grey', 'Blue', 'Green'];

@@ -194,7 +194,14 @@ class MpesaSTKPushView(generics.CreateAPIView):
         amount = order.total_amount
         # Note: in production, replace request.build_absolute_uri with your actual deployed backend URL
         # because Daraja requires a publicly accessible webhook to deliver the callback.
-        callback_url = request.build_absolute_uri('/api/payment/mpesa-callback/')
+        import os
+        backend_url = os.getenv('BACKEND_URL')
+        if backend_url:
+            # Ensure it doesn't end with a slash to avoid double slash
+            backend_url = backend_url.rstrip('/')
+            callback_url = f"{backend_url}/api/payment/mpesa-callback/"
+        else:
+            callback_url = request.build_absolute_uri('/api/payment/mpesa-callback/')
         
         response = initiate_stk_push(phone, amount, order_id, callback_url)
         

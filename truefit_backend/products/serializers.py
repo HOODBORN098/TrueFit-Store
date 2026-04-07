@@ -162,7 +162,14 @@ class OrderSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        user = self.context['request'].user if self.context['request'].user.is_authenticated else None
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
+        
+        # Log for debugging order visibility issues
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Creating order for user: {user} (Authenticated: {user.is_authenticated if user else False})")
+        
         order = Order.objects.create(user=user, **validated_data)
         for item_data in items_data:
             product = item_data.get('product')

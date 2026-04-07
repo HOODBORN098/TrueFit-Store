@@ -55,6 +55,17 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
       description: "Luxury fabrics designed to be lived in and built to last. Premium standards, delivered across Kenya."
     }
   ];
+  
+  const categories = [
+    { name: 'T-Shirts', id: 'T-Shirts', image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Hoodies', id: 'Hoodies', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Jackets', id: 'Jackets', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Bottoms', id: 'Bottoms', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1523206489230-c012c64b2b48?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1539008835270-bc04e67303f2?auto=format&fit=crop&q=80&w=300' },
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -65,6 +76,14 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
+  const handleCategoryClick = (categoryName: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('category', categoryName);
+    window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+    window.dispatchEvent(new Event('search-change'));
+    onNavigate('shop');
+  };
 
   return (
     <div className="w-full">
@@ -150,7 +169,32 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           ))}
         </div>
 
-
+        {/* Category Shortcuts */}
+        <div className="absolute bottom-4 left-0 right-0 z-30 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
+          <div className="flex items-center justify-start md:justify-center gap-6 px-12 min-w-max pb-2">
+            {categories.map((cat) => (
+              <button 
+                key={cat.name} 
+                onClick={() => handleCategoryClick(cat.id)}
+                className="flex flex-col items-center group cursor-pointer transform transition-transform active:scale-95"
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-white/30 backdrop-blur-sm p-1 group-hover:border-white transition-all duration-300 shadow-lg bg-black/5">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+                <span className="mt-3 text-[9px] md:text-xs font-bold uppercase tracking-[0.15em] text-white/90 group-hover:text-white transition-colors drop-shadow-md">
+                  {cat.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Featured Products */}

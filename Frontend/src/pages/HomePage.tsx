@@ -105,7 +105,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6 pb-48">
               <span className={`inline-block px-4 py-1.5 mb-8 border border-white/30 backdrop-blur-md rounded-full text-xs font-semibold tracking-[0.2em] uppercase transition-all duration-700 delay-300 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                 {slide.subtitle}
               </span>
@@ -158,7 +158,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
+        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
           {slides.map((_, index) => (
             <button
               key={index}
@@ -178,7 +178,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
                 onClick={() => handleCategoryClick(cat.id)}
                 className="flex flex-col items-center group cursor-pointer transform transition-transform active:scale-95"
               >
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-white/30 backdrop-blur-sm p-1 group-hover:border-white transition-all duration-300 shadow-lg bg-black/5">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border border-white/30 backdrop-blur-sm p-1 group-hover:border-white transition-all duration-300 shadow-xl bg-black/5">
                   <div className="w-full h-full rounded-full overflow-hidden">
                     <img 
                       src={cat.image} 

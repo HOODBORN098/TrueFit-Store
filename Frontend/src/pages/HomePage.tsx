@@ -63,8 +63,8 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
     { name: 'Bottoms', id: 'Bottoms', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=400' },
     { name: 'Pants', id: 'Pants', image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&q=80&w=400' },
     { name: 'Footwear', id: 'Footwear', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1588850561448-4f921a302071?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Accessories', id: 'Accessories', image: 'https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Dresses', id: 'Dresses', image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&q=80&w=400' },
   ];
 
   useEffect(() => {

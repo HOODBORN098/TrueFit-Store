@@ -9,6 +9,7 @@ class ProductSerializer(serializers.ModelSerializer):
     """
     Serializer for the Product model with server-side input validation.
     """
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -78,11 +79,17 @@ class ProductSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Each color entry must be a non-empty string.")
         return value
 
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
+
 
 class CollectionSerializer(serializers.ModelSerializer):
     """
     Serializer for the Collection model with server-side input validation.
     """
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
@@ -94,6 +101,11 @@ class CollectionSerializer(serializers.ModelSerializer):
         if len(value) < 3:
             raise serializers.ValidationError("Collection name must be at least 3 characters long.")
         return value
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

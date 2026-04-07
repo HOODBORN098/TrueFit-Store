@@ -41,6 +41,7 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dade4nctd',
     'API_KEY': '187889871374933',
     'API_SECRET': 'jn9ppWpOmeRSojtiJZ74XiDUFf8',
+    'SECURE': True,
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
@@ -48,7 +49,8 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 cloudinary.config(
     cloud_name='dade4nctd',
     api_key='187889871374933',
-    api_secret='jn9ppWpOmeRSojtiJZ74XiDUFf8'
+    api_secret='jn9ppWpOmeRSojtiJZ74XiDUFf8',
+    secure=True
 )
 
 # ── Middleware ────────────────────────────────────────────────────────────────

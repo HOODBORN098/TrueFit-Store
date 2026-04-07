@@ -222,26 +222,10 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const handleStepChange = (newStep: 1 | 2) => {
     if (newStep === 2) {
       if (!isShippingValid) return;
-      setStep(2); // Move to step 2 immediately so user can see payment options
-      // Fetch payment intent asynchronously
-      fetch('http://localhost:3000/api/payment/create-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.clientSecret) {
-            setClientSecret(data.clientSecret);
-          } else {
-            console.warn('No client secret received');
-            setStripeError(true);
-          }
-        })
-        .catch(err => {
-          console.error('Stripe initialization failed:', err);
-          setStripeError(true);
-        });
+      setStep(2); 
+      // Stripe backend is not configured yet, so we mark it as currently unavailable.
+      // This prevents the 'ERR_CONNECTION_REFUSED' while still allowing the UI to function.
+      setStripeError(true);
     } else {
       setStep(newStep);
     }

@@ -175,7 +175,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
 
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 stagger-children">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 stagger-children">
           {loading ? (
             Array(4).fill(0).map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />
@@ -254,7 +254,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
 
           </button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 stagger-children">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 stagger-children">
           {loading ? (
             Array(4).fill(0).map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse rounded-2xl" />

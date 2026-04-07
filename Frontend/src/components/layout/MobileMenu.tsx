@@ -41,7 +41,13 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
             Home
           </button>
           <button
-            onClick={() => handleNavigate('shop')}
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.search = ''; // Clear all existing filters
+              window.history.pushState({}, '', url.toString());
+              window.dispatchEvent(new Event('search-change'));
+              handleNavigate('shop');
+            }}
             className="block text-2xl font-bold uppercase tracking-wide hover:text-gray-600 transition-colors">
 
             Shop
@@ -49,8 +55,10 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
           <button
             onClick={() => {
               const url = new URL(window.location.href);
-              url.searchParams.set('newArrival', 'true');
-              window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+              const params = new URLSearchParams();
+              params.set('newArrival', 'true');
+              url.search = params.toString();
+              window.history.pushState({}, '', url.toString());
               window.dispatchEvent(new Event('search-change'));
               handleNavigate('shop');
             }}
@@ -61,8 +69,10 @@ export function MobileMenu({ onNavigate }: MobileMenuProps) {
           <button
             onClick={() => {
               const url = new URL(window.location.href);
-              url.searchParams.set('featured', 'true');
-              window.history.pushState({}, '', url.pathname + '?' + url.searchParams.toString());
+              const params = new URLSearchParams();
+              params.set('featured', 'true');
+              url.search = params.toString();
+              window.history.pushState({}, '', url.toString());
               window.dispatchEvent(new Event('search-change'));
               handleNavigate('shop');
             }}

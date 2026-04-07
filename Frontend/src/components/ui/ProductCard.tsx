@@ -97,16 +97,14 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-col flex-grow p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="text-base md:text-lg font-bold text-gray-900 group-hover:text-gray-600 transition-colors uppercase tracking-tight">
-            {product.name}
-          </h3>
-          <span className="text-base md:text-lg font-bold text-black whitespace-nowrap ml-4">
-            KSH {product.price.toLocaleString()}
-          </span>
+      <div className="flex flex-col flex-grow p-3 md:p-4">
+        <h3 className="font-heading text-sm md:text-base font-bold text-gray-900 group-hover:text-gray-600 transition-colors uppercase tracking-tight truncate w-full mb-0.5">
+          {product.name}
+        </h3>
+        <p className="text-[10px] md:text-xs font-medium text-gray-400 uppercase tracking-widest mb-2 md:mb-3">{product.category}</p>
+        <div className="text-sm md:text-lg font-bold text-black">
+          KSH {product.price.toLocaleString()}
         </div>
-        <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">{product.category}</p>
       </div>
     </div>);
 

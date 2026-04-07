@@ -139,35 +139,7 @@ export function HomePage({ onNavigate, onProductClick }: HomePageProps) {
           </div>
         ))}
 
-        {/* Carousel Controls */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex justify-between px-6 pointer-events-none">
-          <button
-            onClick={prevSlide}
-            className="p-4 hover:bg-white/10 rounded-full transition-colors pointer-events-auto group"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={32} className="text-white/50 group-hover:text-white transition-colors" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="p-4 hover:bg-white/10 rounded-full transition-colors pointer-events-auto group"
-            aria-label="Next slide"
-          >
-            <ChevronRight size={32} className="text-white/50 group-hover:text-white transition-colors" />
-          </button>
-        </div>
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-[22rem] md:bottom-64 left-1/2 -translate-x-1/2 z-20 flex space-x-3">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`h-1.5 transition-all duration-500 ${index === currentSlide ? 'w-12 bg-white' : 'w-3 bg-white/30 hover:bg-white/50'}`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
 
         {/* Category Shortcuts */}
         <div className="absolute bottom-0 left-0 right-0 z-30 pb-4 overflow-x-auto no-scrollbar scroll-smooth bg-gradient-to-t from-black/60 to-transparent">

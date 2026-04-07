@@ -3,56 +3,10 @@ import { Button } from '../components/ui/Button';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Page } from '../types';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useToast } from '../context/ToastContext';
 import { createOrder, triggerMpesaPush, fetchMyOrders } from '../api';
 
-// Replace with your actual publishable key
-const stripePromise = loadStripe('pk_test_placeholder');
-
-function CheckoutForm({ onSuccess, termsAccepted }: { onSuccess: () => void; termsAccepted: boolean }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [message, setMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) return;
-
-    setIsLoading(true);
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin,
-      },
-      redirect: 'if_required',
-    });
-
-    if (error) {
-      setMessage(error.message || 'An unexpected error occurred.');
-    } else {
-      onSuccess();
-    }
-
-    setIsLoading(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      {message && <div className="text-red-500 mt-4 text-sm">{message}</div>}
-      <div className="mt-8">
-        <Button size="lg" disabled={isLoading || !stripe || !elements || !termsAccepted} isLoading={isLoading}>
-          Pay Now
-        </Button>
-      </div>
-    </form>
-  );
-}
+// M-Pesa is the only supported payment method.
 
 const Input = ({ label, value, onChange, type = 'text', placeholder, name, autoComplete }: { label: string; value?: string; onChange?: (val: string) => void; type?: string; placeholder?: string; name?: string; autoComplete?: string }) => (
   <div className="mb-6">
@@ -80,13 +34,11 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
   const { isAuthenticated, user } = useAuth();
   
   const [step, setStep] = useState<1 | 2>(1);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'mpesa'>('card');
   const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [mpesaLoading, setMpesaLoading] = useState(false);
   const { clearCart } = useCart();
   const { showToast } = useToast();
-  const [clientSecret, setClientSecret] = useState('');
-  const [stripeError, setStripeError] = useState(false);
+
   
   // Shipping form state
   const [shippingInfo, setShippingInfo] = useState({
@@ -223,9 +175,6 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
     if (newStep === 2) {
       if (!isShippingValid) return;
       setStep(2); 
-      // Stripe backend is not configured yet, so we mark it as currently unavailable.
-      // This prevents the 'ERR_CONNECTION_REFUSED' while still allowing the UI to function.
-      setStripeError(true);
     } else {
       setStep(newStep);
     }
@@ -303,69 +252,42 @@ export function CheckoutPage({ onNavigate }: CheckoutPageProps) {
 
           {step === 2 && (
             <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold uppercase tracking-tight mb-8">Payment</h2>
-              <div className="flex space-x-4 mb-8">
-                <button
-                  className={`flex-1 py-4 border ${paymentMethod === 'card' ? 'border-black bg-black text-white' : 'border-gray-200'} font-medium uppercase tracking-wider transition-colors`}
-                  onClick={() => setPaymentMethod('card')}
-                >
-                  Card
-                </button>
-                <button
-                  className={`flex-1 py-4 border ${paymentMethod === 'mpesa' ? 'border-green-600 bg-green-600 text-white' : 'border-gray-200'} font-medium uppercase tracking-wider transition-colors`}
-                  onClick={() => setPaymentMethod('mpesa')}
-                >
-                  M-Pesa
-                </button>
-              </div>
+              <div className="space-y-4 animate-fade-in-up bg-gray-50 p-6 rounded mb-8 border border-green-100">
+                <div className="bg-green-50 p-4 border border-green-100 rounded-lg">
+                  <p className="text-sm text-green-800 mb-2 font-bold">Lipa na M-Pesa</p>
+                  <p className="text-xs text-green-700">Enter your M-Pesa phone number below. You will receive a prompt on your phone to complete the payment.</p>
+                </div>
+                
+                {/* Non-refundable Policy Notice */}
+                <div className="bg-amber-50 p-3 border border-amber-200 rounded flex items-start gap-2">
+                  <span className="text-amber-600 font-bold">!</span>
+                  <p className="text-[10px] text-amber-800 font-medium leading-tight">
+                    <span className="font-bold uppercase">Important:</span> All purchases are strictly <span className="underline">non-refundable</span>. By proceeding, you agree to this final sale policy.
+                  </p>
+                </div>
 
-              {paymentMethod === 'card' ? (
-                <div className="bg-gray-50 p-6 rounded mb-8 border border-gray-200">
-                  {clientSecret ? (
-                    <Elements options={{ clientSecret }} stripe={stripePromise}>
-                      <CheckoutForm onSuccess={() => alert('Order Placed Successfully!')} termsAccepted={termsAccepted} />
-                    </Elements>
-                  ) : stripeError ? (
-                    <div className="text-sm text-red-500 bg-red-50 p-4 border border-red-100 rounded">
-                      Card payment is currently unavailable. Please try M-Pesa or contact support.
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                      Loading card payment options...
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="0712345678"
+                    className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-green-600 transition-colors bg-white px-2"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4 animate-fade-in-up bg-gray-50 p-6 rounded mb-8 border border-green-100">
-                  <div className="bg-green-50 p-4 border border-green-100 rounded-lg">
-                    <p className="text-sm text-green-800 mb-2 font-bold">Lipa na M-Pesa</p>
-                    <p className="text-xs text-green-700">Enter your M-Pesa phone number below. You will receive a prompt on your phone to complete the payment.</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Phone Number</label>
-                    <input
-                      type="tel"
-                      placeholder="0712345678"
-                      className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-green-600 transition-colors bg-white px-2"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                    />
-                  </div>
-                  <div className="mt-8">
-                    <Button
-                      size="lg"
-                      fullWidth
-                      onClick={handleMpesaPayment}
-                      isLoading={mpesaLoading}
-                      disabled={!termsAccepted}
-                    // Manual style override for Green button
-                    >
-                      <span className="text-white">Pay with M-Pesa</span>
-                    </Button>
-                  </div>
+                <div className="mt-8">
+                  <Button
+                    size="lg"
+                    fullWidth
+                    onClick={handleMpesaPayment}
+                    isLoading={mpesaLoading}
+                    disabled={!termsAccepted}
+                  >
+                    <span className="text-white">Pay with M-Pesa</span>
+                  </Button>
                 </div>
-              )}
+              </div>
 
               {/* Terms & Conditions Acceptance */}
               <div className="mt-8 pt-8 border-t border-gray-100 flex items-start gap-3">

@@ -18,7 +18,7 @@ services:
       - key: CLOUDINARY_CLOUD_NAME
         value: "dade4nctd"
       - key: CLOUDINARY_API_KEY
-        value: "187689871374933"
+        value: "187889871374933"
       - key: CLOUDINARY_API_SECRET
         value: "jn9ppWpOmeRSojtiJZ74XiDUFf8"
       - key: SECRET_KEY

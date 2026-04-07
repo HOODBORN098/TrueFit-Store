@@ -26,8 +26,8 @@ urlpatterns = [
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
 
     # Orders Endpoints
-    path('orders/', OrderCreateView.as_view(), name='order-create'),
-    path('orders/me/', MyOrdersView.as_view(), name='my-orders'),
+    path('orders/create/', OrderCreateView.as_view(), name='order-create'),
+    path('orders/my-orders/', MyOrdersView.as_view(), name='my-orders'),
 
     # Newsletter Endpoints
     path('newsletter/subscribe/', NewsletterSubscribeView.as_view(), name='newsletter-subscribe'),

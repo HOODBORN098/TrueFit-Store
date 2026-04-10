@@ -49,7 +49,7 @@ export interface PaginatedResponse<T> {
 
 async function apiFetch<T>(path: string, options?: RequestInit & { noAuth?: boolean }): Promise<T> {
   const url = `${BASE_URL}${path}`;
-  const token = sessionStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   
   const headers: Record<string, string> = {
     'Accept': 'application/json',

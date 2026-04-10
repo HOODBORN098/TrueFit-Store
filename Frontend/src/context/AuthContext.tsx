@@ -30,15 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { showToast } = useToast();
 
     useEffect(() => {
-        // Purge legacy global auth
-        if (localStorage.getItem('access_token')) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('user_data');
-        }
-
-        const storedToken = sessionStorage.getItem('access_token');
-        const storedUser = sessionStorage.getItem('user_data');
+        const storedToken = localStorage.getItem('access_token');
+        const storedUser = localStorage.getItem('user_data');
         
         if (storedToken && storedUser) {
             try {
@@ -60,8 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = (accessToken: string, refreshToken: string, userData: any) => {
-        sessionStorage.setItem('access_token', accessToken);
-        sessionStorage.setItem('refresh_token', refreshToken);
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('refresh_token', refreshToken);
         
         const mappedUser: User = {
             id: userData.id,
@@ -73,15 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             phone: userData.phone || '',
         };
 
-        sessionStorage.setItem('user_data', JSON.stringify(mappedUser));
+        localStorage.setItem('user_data', JSON.stringify(mappedUser));
         setToken(accessToken);
         setUser(mappedUser);
     };
 
     const logout = () => {
-        sessionStorage.removeItem('access_token');
-        sessionStorage.removeItem('refresh_token');
-        sessionStorage.removeItem('user_data');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_data');
         setToken(null);
         setUser(null);
         showToast('Logged out successfully', 'info');

@@ -69,7 +69,12 @@ export function AdminAddCollection({ onNavigate, collectionId }: AdminAddCollect
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!validate()) return;
+        console.log('[Admin] Submitting collection form...', formData);
+        
+        if (!validate()) {
+            console.warn('[Admin] Collection form validation failed', errors);
+            return;
+        }
 
         setLoading(true);
         try {
@@ -80,17 +85,21 @@ export function AdminAddCollection({ onNavigate, collectionId }: AdminAddCollect
             
             if (imageFile) {
                 submitData.append('image', imageFile);
+                console.log('[Admin] Including new collection image file');
             }
 
             if (isEdit) {
+                console.log(`[Admin] Updating collection ID: ${collectionId}`);
                 await updateCollection(collectionId, submitData);
                 showToast('Collection updated successfully!', 'success');
             } else {
+                console.log('[Admin] Creating new collection');
                 await createCollection(submitData);
                 showToast('Collection created successfully!', 'success');
             }
             onNavigate('admin-dashboard');
         } catch (error) {
+            console.error('[Admin] Collection submission error:', error);
             const msg = error instanceof Error ? error.message : `Failed to ${isEdit ? 'update' : 'create'} collection.`;
             showToast(msg, 'error');
         } finally {
@@ -100,6 +109,7 @@ export function AdminAddCollection({ onNavigate, collectionId }: AdminAddCollect
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        console.log(`[Admin] Collection field changed: ${name} = ${value}`);
         
         let newFormData = { ...formData, [name]: value };
         
@@ -119,84 +129,100 @@ export function AdminAddCollection({ onNavigate, collectionId }: AdminAddCollect
     };
 
     const FieldError = ({ field }: { field: keyof FormErrors }) =>
-        errors[field] ? <p className="text-red-500 text-xs mt-1">{errors[field]}</p> : null;
+        errors[field] ? <p className="text-red-500 text-xs font-semibold mt-1 animate-fade-in">{errors[field]}</p> : null;
 
     return (
-        <div className="max-w-2xl mx-auto px-6 py-12">
+        <div className="max-w-2xl mx-auto px-6 py-12 animate-fade-in-up">
             <button
-                onClick={() => onNavigate('admin-dashboard')}
-                className="flex items-center text-sm text-gray-500 hover:text-black mb-8"
+                type="button"
+                onClick={() => {
+                    console.log('[Admin] Navigating back to dashboard');
+                    onNavigate('admin-dashboard');
+                }}
+                className="flex items-center text-sm font-semibold text-gray-500 hover:text-indigo-600 mb-8 transition-colors group"
             >
-                <ArrowLeft size={16} className="mr-2" /> Back to Dashboard
+                <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
             </button>
 
-            <h1 className="text-3xl font-bold uppercase tracking-tight mb-8">
-                {isEdit ? 'Edit Collection' : 'Create New Collection'}
-            </h1>
+            <div className="mb-10">
+                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+                    {isEdit ? 'Edit Collection' : 'Create New Collection'}
+                </h1>
+                <p className="text-gray-500 mt-1">Group your products into aesthetic series or seasons.</p>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Collection Name *</label>
-                    <input
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="e.g. Obsidian Series"
-                        className={`w-full border p-3 focus:outline-none focus:border-black transition-colors ${errors.name ? 'border-red-400' : 'border-gray-300'}`}
-                    />
-                    <FieldError field="name" />
+            <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+                <div className="card space-y-6 border-gray-100">
+                    <h2 className="text-lg font-bold text-gray-800 pb-4 border-b border-gray-50">General Details</h2>
+                    
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Collection Name *</label>
+                        <input
+                            name="name"
+                            required
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="e.g. Obsidian Series"
+                            className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
+                        />
+                        <FieldError field="name" />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL Slug *</label>
+                        <input
+                            name="slug"
+                            required
+                            value={formData.slug}
+                            onChange={handleChange}
+                            placeholder="e.g. obsidian-series"
+                            className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all ${errors.slug ? 'border-red-400' : 'border-gray-200'}`}
+                        />
+                        <FieldError field="slug" />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description *</label>
+                        <textarea
+                            name="description"
+                            required
+                            rows={4}
+                            value={formData.description}
+                            onChange={handleChange}
+                            placeholder="Describe this collection..."
+                            className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none ${errors.description ? 'border-red-400' : 'border-gray-200'}`}
+                        />
+                        <FieldError field="description" />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cover Image</label>
+                        <input
+                            name="image"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    console.log('[Admin] New collection image:', e.target.files[0].name);
+                                    setImageFile(e.target.files[0]);
+                                    setErrors(prev => ({ ...prev, image: undefined }));
+                                }
+                            }}
+                            className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-gray-50/50 ${errors.image ? 'border-red-400' : 'border-gray-200'}`}
+                        />
+                        <FieldError field="image" />
+                        <p className="text-[10px] text-gray-400 font-medium uppercase mt-2 italic">This image will be used as the collection background.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">URL Slug *</label>
-                    <input
-                        name="slug"
-                        required
-                        value={formData.slug}
-                        onChange={handleChange}
-                        placeholder="e.g. obsidian-series"
-                        className={`w-full border p-3 focus:outline-none focus:border-black transition-colors ${errors.slug ? 'border-red-400' : 'border-gray-300'}`}
-                    />
-                    <FieldError field="slug" />
+                <div className="pt-4 pb-12">
+                    <Button type="submit" variant="primary" size="lg" fullWidth isLoading={loading} className="py-4 text-lg">
+                        {isEdit ? 'Update Collection' : 'Create Collection'}
+                    </Button>
                 </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Description *</label>
-                    <textarea
-                        name="description"
-                        required
-                        rows={4}
-                        value={formData.description}
-                        onChange={handleChange}
-                        placeholder="Describe this collection..."
-                        className={`w-full border p-3 focus:outline-none focus:border-black transition-colors resize-none ${errors.description ? 'border-red-400' : 'border-gray-300'}`}
-                    />
-                    <FieldError field="description" />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 uppercase mb-2">Cover Image</label>
-                    <input
-                        name="image"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                                setImageFile(e.target.files[0]);
-                                setErrors(prev => ({ ...prev, image: undefined }));
-                            }
-                        }}
-                        className={`w-full border p-3 focus:outline-none focus:border-black bg-white ${errors.image ? 'border-red-400' : 'border-gray-300'}`}
-                    />
-                    <FieldError field="image" />
-                    <p className="text-xs text-gray-400 mt-1">This image will be used as the collection background.</p>
-                </div>
-
-                <Button type="submit" variant="primary" size="lg" fullWidth isLoading={loading}>
-                    {isEdit ? 'Update Collection' : 'Create Collection'}
-                </Button>
             </form>
         </div>
+    );
+}
     );
 }
